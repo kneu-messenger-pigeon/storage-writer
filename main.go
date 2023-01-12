@@ -125,7 +125,7 @@ func main() {
 	}
 
 	eventLoop := EventLoop{
-		connectorsPool: [ConnectorPoolSize]*KafkaToRedisConnector{
+		connectorsPool: [ConnectorPoolSize]ConnectorInterface{
 			scoreConnector1,
 			scoreConnector2,
 			lessonConnector,
@@ -137,9 +137,11 @@ func main() {
 	defer func() {
 		redisClient.BgSave(context.Background())
 		_ = redisClient.Close()
-		for _, connector := range eventLoop.connectorsPool {
-			_ = connector.reader.Close()
-		}
+
+		_ = scoreConnector1.reader.Close()
+		_ = scoreConnector2.reader.Close()
+		_ = lessonConnector.reader.Close()
+		_ = disciplineConnector.reader.Close()
 	}()
 	eventLoop.execute()
 }

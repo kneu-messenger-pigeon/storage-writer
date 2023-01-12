@@ -12,12 +12,18 @@ import (
 	"time"
 )
 
+type ConnectorInterface interface {
+	execute(ctx context.Context, wg *sync.WaitGroup)
+}
+
 type KafkaToRedisConnector struct {
 	out    io.Writer
 	reader events.ReaderInterface
 	redis  redis.UniversalClient
 	writer WriterInterface
 }
+
+const RedisBackgroundSaveInProgress = "ERR Background save already in progress"
 
 func (connector *KafkaToRedisConnector) execute(ctx context.Context, wg *sync.WaitGroup) {
 	var err error
@@ -79,7 +85,7 @@ func (connector *KafkaToRedisConnector) saveRedisIfLastSaveOlderThan(lastSaveSho
 	}
 
 	err := connector.redis.BgSave(context.Background()).Err()
-	if err != nil && err.Error() == "ERR Background save already in progress" {
+	if err != nil && err.Error() == RedisBackgroundSaveInProgress {
 		err = nil
 	}
 	return err

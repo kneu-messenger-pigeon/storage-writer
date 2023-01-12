@@ -12,7 +12,7 @@ const ConnectorPoolSize = 4
 
 type EventLoop struct {
 	out                     io.Writer
-	connectorsPool          [ConnectorPoolSize]*KafkaToRedisConnector
+	connectorsPool          [ConnectorPoolSize]ConnectorInterface
 	scoresChangesFeedWriter ScoresChangesFeedWriterInterface
 }
 
