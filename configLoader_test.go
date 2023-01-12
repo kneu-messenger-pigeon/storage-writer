@@ -10,21 +10,17 @@ import (
 )
 
 var expectedConfig = Config{
-	kafkaHost:             "KAFKA:9999",
-	dekanatDbDriverName:   "firebird-test",
-	secondaryDekanatDbDSN: "USER:PASSOWORD@HOST/DATABASE",
-	kafkaTimeout:          time.Second * 10,
-	kafkaAttempts:         0,
-	workerPoolSize:        3,
+	redisDsn:      "REDIS:6379",
+	kafkaHost:     "KAFKA:9999",
+	kafkaTimeout:  time.Second * 10,
+	kafkaAttempts: 0,
 }
 
 func TestLoadConfigFromEnvVars(t *testing.T) {
 	t.Run("FromEnvVars", func(t *testing.T) {
+		_ = os.Setenv("REDIS_DSN", expectedConfig.redisDsn)
 		_ = os.Setenv("KAFKA_HOST", expectedConfig.kafkaHost)
-		_ = os.Setenv("DEKANAT_DB_DRIVER_NAME", expectedConfig.dekanatDbDriverName)
-		_ = os.Setenv("SECONDARY_DEKANAT_DB_DSN", expectedConfig.secondaryDekanatDbDSN)
 		_ = os.Setenv("KAFKA_TIMEOUT", strconv.Itoa(int(expectedConfig.kafkaTimeout.Seconds())))
-		_ = os.Setenv("WORKER_POOL_SIZE", strconv.Itoa(expectedConfig.workerPoolSize))
 
 		config, err := loadConfig("")
 
@@ -37,8 +33,7 @@ func TestLoadConfigFromEnvVars(t *testing.T) {
 		var envFileContent string
 
 		envFileContent += fmt.Sprintf("KAFKA_HOST=%s\n", expectedConfig.kafkaHost)
-		envFileContent += fmt.Sprintf("SECONDARY_DEKANAT_DB_DSN=%s\n", expectedConfig.secondaryDekanatDbDSN)
-		envFileContent += fmt.Sprintf("WORKER_POOL_SIZE=%d\n", expectedConfig.workerPoolSize)
+		envFileContent += fmt.Sprintf("REDIS_DSN=%s\n", expectedConfig.redisDsn)
 
 		testEnvFilename := "TestLoadConfigFromFile.env"
 		err := os.WriteFile(testEnvFilename, []byte(envFileContent), 0644)
@@ -53,26 +48,24 @@ func TestLoadConfigFromEnvVars(t *testing.T) {
 	})
 
 	t.Run("EmptyConfig", func(t *testing.T) {
-		_ = os.Setenv("DEKANAT_DB_DRIVER_NAME", "")
-		_ = os.Setenv("SECONDARY_DEKANAT_DB_DSN", "")
+		_ = os.Setenv("REDIS_DSN", "")
 		_ = os.Setenv("KAFKA_HOST", "")
 		_ = os.Setenv("KAFKA_TIMEOUT", "")
-		_ = os.Setenv("WORKER_POOL_SIZE", "")
 
 		config, err := loadConfig("")
 
 		assert.Error(t, err, "loadConfig() should exit with error, actual error is nil")
 
 		assert.Emptyf(
-			t, config.secondaryDekanatDbDSN,
-			"Expected for empty config.secondaryDekanatDbDSN, actual %s", config.secondaryDekanatDbDSN,
+			t, config.redisDsn,
+			"Expected for empty config.secondaryDekanatDbDSN, actual %s", config.redisDsn,
 		)
 		assert.Emptyf(
 			t, config.kafkaHost,
-			"Expected for empty config.secondaryDekanatDbDSN, actual %s", config.secondaryDekanatDbDSN,
+			"Expected for empty config.kafkaHost, actual %s", config.kafkaHost,
 		)
 
-		os.Setenv("SECONDARY_DEKANAT_DB_DSN", "dummy-not-empty")
+		os.Setenv("REDIS_DSN", "dummy-not-empty")
 		config, err = loadConfig("")
 
 		assert.Error(t, err, "loadConfig() should exit with error, actual error is nil")
@@ -82,29 +75,13 @@ func TestLoadConfigFromEnvVars(t *testing.T) {
 		)
 		assert.Emptyf(
 			t, config.kafkaHost,
-			"Expected for empty config.secondaryDekanatDbDSN, actual %s", config.secondaryDekanatDbDSN,
+			"Expected for empty config.kafkaHost, actual %s", config.kafkaHost,
 		)
-	})
-
-	t.Run("EmptyNotRequiredParamsConfig", func(t *testing.T) {
-		_ = os.Setenv("DEKANAT_DB_DRIVER_NAME", "")
-		_ = os.Setenv("SECONDARY_DEKANAT_DB_DSN", "dummy")
-		_ = os.Setenv("KAFKA_HOST", "dummy")
-		_ = os.Setenv("WORKER_POOL_SIZE", "")
-
-		config, err := loadConfig("")
-
-		assert.NoErrorf(t, err, "loadConfig() should return valid config, actual error %s", err)
-
-		assert.Equalf(
-			t, "firebirdsql", config.dekanatDbDriverName,
-			"Expected for default firebirdsql driver, actual: %s", config.dekanatDbDriverName,
-		)
-
 	})
 
 	t.Run("NotExistConfigFile", func(t *testing.T) {
-		os.Setenv("SECONDARY_DEKANAT_DB_DSN", "")
+		os.Setenv("REDIS_DSN", "")
+		os.Setenv("KAFKA_HOST", "")
 
 		config, err := loadConfig("not-exists.env")
 
@@ -114,25 +91,13 @@ func TestLoadConfigFromEnvVars(t *testing.T) {
 			"Expected for not exist file error, actual: %s", err.Error(),
 		)
 		assert.Emptyf(
-			t, config.secondaryDekanatDbDSN,
-			"Expected for empty config.secondaryDekanatDbDSN, actual %s", config.secondaryDekanatDbDSN,
+			t, config.kafkaHost,
+			"Expected for empty config.kafkaHost, actual %s", config.kafkaHost,
 		)
 	})
 }
 
 func assertConfig(t *testing.T, expected Config, actual Config) {
-	assert.Equalf(
-		t, expected.kafkaHost, actual.kafkaHost,
-		"Expected for Kafka Host: %s, actual %s", expected.kafkaHost, actual.kafkaHost,
-	)
-
-	assert.Equalf(
-		t, expected.dekanatDbDriverName, actual.dekanatDbDriverName,
-		"Expected for DB Drivername : %s, actual: %s", expected.dekanatDbDriverName, actual.dekanatDbDriverName,
-	)
-
-	assert.Equalf(
-		t, expected.secondaryDekanatDbDSN, actual.secondaryDekanatDbDSN,
-		"Expected for Secondary DSN: %s, actual: %s", expected.secondaryDekanatDbDSN, actual.secondaryDekanatDbDSN,
-	)
+	assert.Equal(t, expected.kafkaHost, actual.kafkaHost)
+	assert.Equal(t, expected.redisDsn, actual.redisDsn)
 }
