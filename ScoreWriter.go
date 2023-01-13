@@ -6,10 +6,9 @@ import (
 	"github.com/go-redis/redis/v9"
 	"github.com/kneu-messenger-pigeon/events"
 	"strconv"
-	"time"
 )
 
-const IsAbsentScoreValue = -999999
+const IsAbsentScoreValue = float64(-999999)
 
 const maxWriteRetries = 3
 
@@ -71,10 +70,6 @@ func (writer *ScoreWriter) write(s any) (err error) {
 			if scoreDiff != 0 {
 				pipe.ZIncrBy(ctx, disciplineTotalsKey, scoreDiff, studentKey)
 			}
-
-			if !pipe.SIsMember(ctx, studentDisciplinesKey, event.DisciplineId).Val() {
-				pipe.SAdd(ctx, studentDisciplinesKey, event.DisciplineId)
-			}
 			return nil
 		})
 		if err == nil {
@@ -85,14 +80,21 @@ func (writer *ScoreWriter) write(s any) (err error) {
 
 	// Retry if the key has been changed.
 	for i := 0; i < maxWriteRetries; i++ {
-		err = writer.redis.Watch(ctx, writeValueFunc, studentDisciplineScoresKey, disciplineTotalsKey, studentDisciplinesKey)
+		err = writer.redis.Watch(ctx, writeValueFunc, studentDisciplineScoresKey)
 		if err == nil || err != redis.TxFailedErr {
 			break
 		}
-		time.Sleep(time.Microsecond)
 	}
 
-	if hasChanges {
+	if hasChanges && err == nil {
+		if err == nil {
+			var isMember bool
+			isMember, err = writer.redis.SIsMember(ctx, studentDisciplinesKey, event.DisciplineId).Result()
+			if !isMember {
+				err = writer.redis.SAdd(ctx, studentDisciplinesKey, event.DisciplineId).Err()
+			}
+		}
+
 		writer.scoresChangesFeedWriter.addToQueue(*event)
 	}
 	return err
