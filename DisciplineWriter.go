@@ -28,12 +28,19 @@ func (writer *DisciplineWriter) write(e interface{}) error {
 
 	key := fmt.Sprintf("%d:discipline:%d", event.Year, event.Id)
 	if writer.redis.HGet(context.Background(), key, "origName").Val() != event.Name {
-		return writer.redis.HMSet(
+		return writer.redis.HSet(
 			context.Background(), key,
-			"name", event.Name,
+			"name", clearDisciplineName(event.Name),
 			"origName", event.Name,
 		).Err()
 	}
 
 	return nil
+}
+
+func clearDisciplineName(name string) string {
+	if name == "Фінанси (модуль 1 Гроші та кредит, модуль 2 Фінанси)" {
+		return "Фінанси"
+	}
+	return name
 }

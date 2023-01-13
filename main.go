@@ -2,33 +2,42 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-redis/redis/v9"
 	"github.com/segmentio/kafka-go"
+	"io"
 	"os"
 	"time"
 )
 
+const ExitCodeMainError = 1
+
 func main() {
+	os.Exit(handleExitError(os.Stderr, runApp(os.Stdout)))
+}
+
+func runApp(out io.Writer) error {
+	var opt *redis.Options
+
 	envFilename := ""
 	if _, err := os.Stat(".env"); err == nil {
 		envFilename = ".env"
 	}
 
 	config, err := loadConfig(envFilename)
-	if err != nil {
-		//		return errors.New("Failed to load config: " + err.Error())
+	if err == nil {
+		opt, err = redis.ParseURL(config.redisDsn)
 	}
 
-	opt, err := redis.ParseURL(config.redisDsn)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	redisClient := redis.NewClient(opt)
 	groupId := "storage-writer"
 
 	scoresChangesFeedWriter := &ScoresChangesFeedWriter{
-		out: os.Stdout,
+		out: out,
 		writer: &kafka.Writer{
 			Addr:     kafka.TCP(config.kafkaHost),
 			Topic:    "scores_changes_feed",
@@ -37,7 +46,7 @@ func main() {
 	}
 
 	scoreConnector1 := &KafkaToRedisConnector{
-		out:   os.Stdout,
+		out:   out,
 		redis: redisClient,
 		writer: &ScoreWriter{
 			scoresChangesFeedWriter: scoresChangesFeedWriter,
@@ -60,7 +69,7 @@ func main() {
 	}
 
 	scoreConnector2 := &KafkaToRedisConnector{
-		out:   os.Stdout,
+		out:   out,
 		redis: redisClient,
 		writer: &ScoreWriter{
 			scoresChangesFeedWriter: scoresChangesFeedWriter,
@@ -83,7 +92,7 @@ func main() {
 	}
 
 	lessonConnector := &KafkaToRedisConnector{
-		out:    os.Stdout,
+		out:    out,
 		redis:  redisClient,
 		writer: &LessonWriter{},
 		reader: kafka.NewReader(
@@ -104,7 +113,7 @@ func main() {
 	}
 
 	disciplineConnector := &KafkaToRedisConnector{
-		out:    os.Stdout,
+		out:    out,
 		redis:  redisClient,
 		writer: &DisciplineWriter{},
 		reader: kafka.NewReader(
@@ -144,4 +153,17 @@ func main() {
 		_ = disciplineConnector.reader.Close()
 	}()
 	eventLoop.execute()
+	return nil
+}
+
+func handleExitError(errStream io.Writer, err error) int {
+	if err != nil {
+		_, _ = fmt.Fprintln(errStream, err)
+	}
+
+	if err != nil {
+		return ExitCodeMainError
+	}
+
+	return 0
 }
