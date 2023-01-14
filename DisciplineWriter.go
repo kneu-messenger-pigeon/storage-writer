@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"github.com/go-redis/redis/v9"
 	"github.com/kneu-messenger-pigeon/events"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+	"regexp"
+	"strings"
 )
 
 type DisciplineWriter struct {
@@ -38,9 +42,59 @@ func (writer *DisciplineWriter) write(e interface{}) error {
 	return nil
 }
 
+var regexps = [4]*regexp.Regexp{
+	/**
+	 * Remove starting with: "Тренінг-курс(Створення власного ІТ-бізнесу)", "Тренінг-курс `Управління командами`"
+	 * https://regex101.com/r/j8BjSd/1
+	 */
+	regexp.MustCompile(`(?i)^\s*Тренінг-курс\s*\(?`),
+
+	/**
+	 * remove ending with: ", Юр. Інст."; ", Фін.", ", Марк.", ", Інф. Інст."
+	 * https://regex101.com/r/Q1Uq1f/1
+	 */
+	regexp.MustCompile(`(?i),(\s*\p{L}{2,5}\.){1,2}\s*$`),
+
+	/**
+	 * Remove ending with: ", 3 сем.", ", 4 сем.", ", 5 сем., Юрінст", ", 5 сем., Інфінст"
+	 * https://regex101.com/r/kWUKoH/2
+	 */
+	regexp.MustCompile(`(,\s*)?[1-9-]{1,3}\s+сем\.?\s*(,\s*\p{L}{2,7})?$`),
+
+	/**
+	 * Remove parentheses: " (Туристичне країнознавство)", " (залік)", " (англомовна)"
+	 */
+	regexp.MustCompile(`\s*\([^\)]*\)`),
+}
+
+var removeDuplicateSpaces = regexp.MustCompile(`\s+`)
+
+/**
+ * Normalize apostrophe: "Компʼютерна математика"
+ * https://regex101.com/r/xtA6HI/1
+ */
+var replaceApostrophe = regexp.MustCompile("(\\p{L})[``’'ʼ](\\p{L})")
+
+var ukrainianToUpper = cases.Upper(language.Ukrainian)
+
 func clearDisciplineName(name string) string {
-	if name == "Фінанси (модуль 1 Гроші та кредит, модуль 2 Фінанси)" {
-		return "Фінанси"
+	name = replaceApostrophe.ReplaceAllString(name, "$1\\ʼ$2")
+	name = strings.ReplaceAll(name, "`", "")
+	name = strings.ReplaceAll(name, "\\", "")
+
+	for i := 0; i < len(regexps); i++ {
+		name = regexps[i].ReplaceAllString(name, "")
 	}
+
+	name = strings.TrimSpace(name)
+	name = strings.TrimRight(name, "_-`.123  #&$/»)")
+	name = strings.TrimLeft(name, "_-`.  #&$«(")
+	name = removeDuplicateSpaces.ReplaceAllString(name, " ")
+
+	name = ukrainianToUpper.String(name[:1]) + name[1:]
+
+	name = strings.Replace(name, "1 С:", "1С:", 1)
+	name = strings.Replace(name, "іноз мова", "іноземна мова", 1)
+
 	return name
 }
