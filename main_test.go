@@ -19,13 +19,21 @@ func TestRunApp(t *testing.T) {
 		_ = os.Setenv("REDIS_DSN", expectedConfig.redisDsn)
 		_ = os.Setenv("KAFKA_TIMEOUT", strconv.Itoa(int(expectedConfig.kafkaTimeout.Seconds())))
 
+		var out bytes.Buffer
+
+		running := true
 		go func() {
-			time.Sleep(time.Millisecond * 600)
+			maxEndTime := time.Now().Add(time.Second * 5)
+			for running && maxEndTime.After(time.Now()) &&
+				strings.Count(out.String(), "connector started") < ConnectorPoolSize {
+				time.Sleep(time.Millisecond)
+			}
 			_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		}()
 
-		var out bytes.Buffer
 		err := runApp(&out)
+		running = false
+
 		assert.NoError(t, err, "Expected for TooManyError, got %s", err)
 
 		outputString := out.String()
