@@ -118,6 +118,39 @@ func TestKafkaToRedisConnector(t *testing.T) {
 
 		assert.Contains(t, out.String(), expectedError.Error())
 	})
+
+	t.Run("Emulate writer init error", func(t *testing.T) {
+		out := &bytes.Buffer{}
+
+		redis, redisMock := redismock.NewClientMock()
+
+		writer := NewMockWriterInterface(t)
+		writer.On("setRedis", redis).Once()
+		writer.On("getExpectedMessageKey").Return("")
+		writer.On("getExpectedEventType").Return(&events.DisciplineEvent{})
+
+		reader := events.NewMockReaderInterface(t)
+
+		connector := KafkaToRedisConnector{
+			out:    out,
+			redis:  redis,
+			reader: reader,
+			writer: writer,
+		}
+
+		wg := sync.WaitGroup{}
+		wg.Add(1)
+
+		ctx, _ := context.WithTimeout(context.Background(), time.Millisecond)
+		connector.execute(ctx, &wg)
+
+		assert.NoError(t, redisMock.ExpectationsWereMet())
+		reader.AssertNotCalled(t, "FetchMessage")
+		reader.AssertNotCalled(t, "CommitMessages")
+		writer.AssertNotCalled(t, "write")
+
+		assert.Empty(t, out.String())
+	})
 }
 
 func TestConnectorSaveRedisIfLastSaveOlderThan(t *testing.T) {

@@ -23,14 +23,14 @@ func TestEventLoopExecute(t *testing.T) {
 
 		connector.On("execute", matchContext, matchWaitGroup).Return().Times(ConnectorPoolSize)
 
+		connectorPool := [ConnectorPoolSize]ConnectorInterface{}
+		for i := 0; i < ConnectorPoolSize; i++ {
+			connectorPool[i] = connector
+		}
+
 		eventloop := EventLoop{
-			out: out,
-			connectorsPool: [ConnectorPoolSize]ConnectorInterface{
-				connector,
-				connector,
-				connector,
-				connector,
-			},
+			out:                     out,
+			connectorsPool:          connectorPool,
 			scoresChangesFeedWriter: scoresChangesFeedWriter,
 		}
 

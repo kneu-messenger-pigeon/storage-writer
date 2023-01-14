@@ -133,12 +133,36 @@ func runApp(out io.Writer) error {
 		),
 	}
 
+	YearChangeConnector := &KafkaToRedisConnector{
+		out:   out,
+		redis: redisClient,
+		writer: &YearChangeWriter{
+			isValidEducationYear: isValidEducationYear,
+		},
+		reader: kafka.NewReader(
+			kafka.ReaderConfig{
+				Brokers:     []string{config.kafkaHost},
+				GroupID:     groupId,
+				Topic:       "meta_events",
+				MinBytes:    10,
+				MaxBytes:    10e3,
+				MaxWait:     time.Second,
+				MaxAttempts: config.kafkaAttempts,
+				Dialer: &kafka.Dialer{
+					Timeout:   config.kafkaTimeout,
+					DualStack: kafka.DefaultDialer.DualStack,
+				},
+			},
+		),
+	}
+
 	eventLoop := EventLoop{
 		connectorsPool: [ConnectorPoolSize]ConnectorInterface{
 			scoreConnector1,
 			scoreConnector2,
 			lessonConnector,
 			disciplineConnector,
+			YearChangeConnector,
 		},
 		scoresChangesFeedWriter: scoresChangesFeedWriter,
 	}

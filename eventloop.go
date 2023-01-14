@@ -8,7 +8,7 @@ import (
 	"syscall"
 )
 
-const ConnectorPoolSize = 4
+const ConnectorPoolSize = 5
 
 type EventLoop struct {
 	out                     io.Writer

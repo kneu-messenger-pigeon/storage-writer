@@ -37,6 +37,11 @@ func (connector *KafkaToRedisConnector) execute(ctx context.Context, wg *sync.Wa
 	expectedMessageKey := connector.writer.getExpectedMessageKey()
 	event := connector.writer.getExpectedEventType()
 
+	if expectedMessageKey == "" || event == nil {
+		wg.Done()
+		return
+	}
+
 	fmt.Fprintf(connector.out, "%T connector started \n", connector.writer)
 
 	for ctx.Err() == nil {

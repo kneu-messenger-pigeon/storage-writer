@@ -90,7 +90,8 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 
 		expectedEventMessage := func(message kafka.Message) bool {
 			if ctx.Err() != nil {
-				savedQueue = scoresChangesFeedWriter.eventQueue
+				savedQueue = make([]events.ScoreEvent, len(scoresChangesFeedWriter.eventQueue))
+				copy(savedQueue, scoresChangesFeedWriter.eventQueue)
 				scoresChangesFeedWriter.eventQueue = make([]events.ScoreEvent, 0)
 			}
 

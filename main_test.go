@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"strconv"
@@ -37,7 +36,7 @@ func TestRunApp(t *testing.T) {
 		assert.NoError(t, err, "Expected for TooManyError, got %s", err)
 
 		outputString := out.String()
-		fmt.Println(outputString)
+		assert.Contains(t, outputString, "*main.YearChangeWriter connector started")
 		assert.Contains(t, outputString, "*main.ScoreWriter connector started")
 		assert.Contains(t, outputString, "*main.LessonWriter connector started")
 		assert.Contains(t, outputString, "*main.DisciplineWriter connector started")
