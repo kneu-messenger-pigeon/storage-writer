@@ -25,10 +25,10 @@ func TestRunApp(t *testing.T) {
 		go func() {
 			maxEndTime := time.Now().Add(time.Second)
 			for running && maxEndTime.After(time.Now()) &&
-				!strings.Contains(out.String(), "connector started") {
-				time.Sleep(time.Millisecond)
+				strings.Count(out.String(), "connector started") >= (ConnectorPoolSize>>1) {
+				time.Sleep(time.Millisecond * 100)
 			}
-			time.Sleep(time.Millisecond * 100)
+			time.Sleep(time.Millisecond * 50)
 			_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		}()
 
@@ -37,7 +37,7 @@ func TestRunApp(t *testing.T) {
 
 		assert.NoError(t, err, "Expected for TooManyError, got %s", err)
 
-		time.Sleep(time.Millisecond * 300)
+		time.Sleep(time.Millisecond * 500)
 		outputString := out.String()
 		fmt.Println(outputString)
 

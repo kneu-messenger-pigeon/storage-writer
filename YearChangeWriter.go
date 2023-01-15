@@ -38,27 +38,38 @@ func (writer *YearChangeWriter) getExpectedEventType() any {
 }
 
 func (writer *YearChangeWriter) write(s any) (err error) {
-	year := s.(*events.CurrentYearEvent).Year
-	if !writer.isValidEducationYear(year) {
-		fmt.Fprintf(writer.out, "Skip invalid education year: %d\n", year)
+	currentYear := s.(*events.CurrentYearEvent).Year
+	if !writer.isValidEducationYear(currentYear) {
+		fmt.Fprintf(writer.out, "Skip invalid education year: %d\n", currentYear)
 		return nil
 	}
 
 	ctx := context.Background()
-	for previousYear := year - 3; previousYear < year; previousYear++ {
+	previousYear, err := writer.redis.Get(ctx, "currentYear").Int()
+	if err == redis.Nil {
+		err = nil
+		previousYear = 0
+	}
+
+	if previousYear != 0 && previousYear != currentYear {
 		iter := writer.redis.Scan(ctx, 0, fmt.Sprintf("%d:*", previousYear), 0).Iterator()
+
 		for err == nil && iter.Next(ctx) {
 			err = writer.redis.Del(ctx, iter.Val()).Err()
 		}
-		if err != nil {
-			return err
-		}
-		if iter.Err() != nil {
-			return iter.Err()
+		if err == nil && iter.Err() != nil {
+			err = iter.Err()
 		}
 	}
 
-	return writer.redis.Save(ctx).Err()
+	if previousYear != currentYear && err == nil {
+		err = writer.redis.Set(ctx, "currentYear", currentYear, 0).Err()
+		if err == nil {
+			err = writer.redis.Save(ctx).Err()
+		}
+	}
+
+	return
 }
 
 func isValidEducationYear(educationYear int) bool {

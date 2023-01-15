@@ -14,6 +14,62 @@ func TestYearChangeWriter(t *testing.T) {
 	isValidEducationYearMockTrue := func(_ int) bool { return true }
 	isValidEducationYearMockFalse := func(_ int) bool { return false }
 
+	t.Run("year not changed", func(t *testing.T) {
+		out := &bytes.Buffer{}
+
+		event := events.CurrentYearEvent{
+			Year: 2031,
+		}
+
+		redis, redisMock := redismock.NewClientMock()
+		redisMock.MatchExpectationsInOrder(true)
+
+		redisMock.ExpectGet("currentYear").SetVal("2031")
+
+		yearChangeWriter := YearChangeWriter{
+			out:                  out,
+			isValidEducationYear: isValidEducationYearMockTrue,
+		}
+
+		yearChangeWriter.setRedis(redis)
+		err := yearChangeWriter.write(&event)
+
+		assert.IsType(t, yearChangeWriter.getExpectedEventType(), &event)
+		assert.Equal(t, yearChangeWriter.getExpectedMessageKey(), events.CurrentYearEventName)
+
+		assert.NoError(t, err)
+		assert.NoError(t, redisMock.ExpectationsWereMet())
+	})
+
+	t.Run("accept new year with empty previous", func(t *testing.T) {
+		out := &bytes.Buffer{}
+
+		event := events.CurrentYearEvent{
+			Year: 2031,
+		}
+
+		redis, redisMock := redismock.NewClientMock()
+		redisMock.MatchExpectationsInOrder(true)
+
+		redisMock.ExpectGet("currentYear").RedisNil()
+		redisMock.ExpectSet("currentYear", 2031, 0).SetVal("OK")
+		redisMock.ExpectSave().SetVal("OK")
+
+		yearChangeWriter := YearChangeWriter{
+			out:                  out,
+			isValidEducationYear: isValidEducationYearMockTrue,
+		}
+
+		yearChangeWriter.setRedis(redis)
+		err := yearChangeWriter.write(&event)
+
+		assert.IsType(t, yearChangeWriter.getExpectedEventType(), &event)
+		assert.Equal(t, yearChangeWriter.getExpectedMessageKey(), events.CurrentYearEventName)
+
+		assert.NoError(t, err)
+		assert.NoError(t, redisMock.ExpectationsWereMet())
+	})
+
 	t.Run("accept new year and delete previous years keys", func(t *testing.T) {
 		out := &bytes.Buffer{}
 
@@ -24,19 +80,7 @@ func TestYearChangeWriter(t *testing.T) {
 		redis, redisMock := redismock.NewClientMock()
 		redisMock.MatchExpectationsInOrder(true)
 
-		redisMock.ExpectScan(0, "2028:*", 0).SetVal([]string{
-			"2028:2:scores:999",
-			"2028:2:discipline",
-		}, 0)
-		redisMock.ExpectDel("2028:2:scores:999").SetVal(1)
-		redisMock.ExpectDel("2028:2:discipline").SetVal(1)
-
-		redisMock.ExpectScan(0, "2029:*", 0).SetVal([]string{
-			"2029:something:213",
-			"2029:students_total",
-		}, 0)
-		redisMock.ExpectDel("2029:something:213").SetVal(1)
-		redisMock.ExpectDel("2029:students_total").SetVal(1)
+		redisMock.ExpectGet("currentYear").SetVal("2030")
 
 		redisMock.ExpectScan(0, "2030:*", 0).SetVal([]string{
 			"2030:1:scores:213",
@@ -45,6 +89,7 @@ func TestYearChangeWriter(t *testing.T) {
 		redisMock.ExpectDel("2030:1:scores:213").SetVal(1)
 		redisMock.ExpectDel("2030:discipline").SetVal(1)
 
+		redisMock.ExpectSet("currentYear", 2031, 0).SetVal("OK")
 		redisMock.ExpectSave().SetVal("OK")
 
 		yearChangeWriter := YearChangeWriter{
@@ -72,19 +117,13 @@ func TestYearChangeWriter(t *testing.T) {
 
 		redis, redisMock := redismock.NewClientMock()
 		redisMock.MatchExpectationsInOrder(true)
+		redisMock.ExpectGet("currentYear").SetVal("2030")
 
-		redisMock.ExpectScan(0, "2028:*", 0).SetVal([]string{
-			"2028:2:scores:999",
-			"2028:2:discipline",
+		redisMock.ExpectScan(0, "2030:*", 0).SetVal([]string{
+			"2030:something:213",
+			"2030:students_total",
 		}, 0)
-		redisMock.ExpectDel("2028:2:scores:999").SetVal(1)
-		redisMock.ExpectDel("2028:2:discipline").SetVal(1)
-
-		redisMock.ExpectScan(0, "2029:*", 0).SetVal([]string{
-			"2029:something:213",
-			"2029:students_total",
-		}, 0)
-		redisMock.ExpectDel("2029:something:213").SetErr(expectedError)
+		redisMock.ExpectDel("2030:something:213").SetErr(expectedError)
 
 		yearChangeWriter := YearChangeWriter{
 			out:                  out,
@@ -110,15 +149,9 @@ func TestYearChangeWriter(t *testing.T) {
 
 		redis, redisMock := redismock.NewClientMock()
 		redisMock.MatchExpectationsInOrder(true)
+		redisMock.ExpectGet("currentYear").SetVal("2030")
 
-		redisMock.ExpectScan(0, "2028:*", 0).SetVal([]string{
-			"2028:2:scores:999",
-			"2028:2:discipline",
-		}, 0)
-		redisMock.ExpectDel("2028:2:scores:999").SetVal(1)
-		redisMock.ExpectDel("2028:2:discipline").SetVal(1)
-
-		redisMock.ExpectScan(0, "2029:*", 0).SetErr(expectedError)
+		redisMock.ExpectScan(0, "2030:*", 0).SetErr(expectedError)
 
 		yearChangeWriter := YearChangeWriter{
 			out:                  out,
