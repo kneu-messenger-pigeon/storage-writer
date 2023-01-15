@@ -30,6 +30,10 @@ func (writer *LessonTypesListWriter) write(s any) (err error) {
 	lessonTypesList := s.(*events.LessonTypesList).List
 	serializedList, _ := json.Marshal(lessonTypesList)
 	prevSerializedList, err := writer.redis.GetSet(context.Background(), "lessonTypes", serializedList).Bytes()
+	if err == redis.Nil {
+		err = nil
+		prevSerializedList = make([]byte, 0)
+	}
 	if err == nil && !bytes.Equal(serializedList, prevSerializedList) {
 		err = writer.redis.BgSave(context.Background()).Err()
 	}

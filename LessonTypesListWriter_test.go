@@ -29,7 +29,7 @@ func TestLessonTypesListWriter(t *testing.T) {
 		redis, redisMock := redismock.NewClientMock()
 		redisMock.MatchExpectationsInOrder(true)
 
-		redisMock.ExpectGetSet("lessonTypes", expectedString).SetVal("")
+		redisMock.ExpectGetSet("lessonTypes", expectedString).RedisNil()
 		redisMock.ExpectBgSave().SetVal("OK")
 
 		lessonTypesListWriter := LessonTypesListWriter{
