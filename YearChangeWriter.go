@@ -26,7 +26,7 @@ func (writer *YearChangeWriter) setRedis(redis redis.UniversalClient) {
 
 func (writer *YearChangeWriter) getExpectedMessageKey() string {
 	// self check on init that we have correct installed writer
-	if writer.isValidEducationYear != nil {
+	if writer.isValidEducationYear != nil && writer.out != nil {
 		return events.CurrentYearEventName
 	}
 

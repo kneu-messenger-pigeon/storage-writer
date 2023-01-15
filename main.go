@@ -133,12 +133,14 @@ func runApp(out io.Writer) error {
 		),
 	}
 
-	YearChangeConnector := &KafkaToRedisConnector{
+	metaEventsConnector := &KafkaToRedisMetaEventsConnector{
 		out:   out,
 		redis: redisClient,
-		writer: &YearChangeWriter{
+		currentYearWriter: &YearChangeWriter{
+			out:                  out,
 			isValidEducationYear: isValidEducationYear,
 		},
+		lessonTypesListWriter: &LessonTypesListWriter{},
 		reader: kafka.NewReader(
 			kafka.ReaderConfig{
 				Brokers:     []string{config.kafkaHost},
@@ -162,7 +164,7 @@ func runApp(out io.Writer) error {
 			scoreConnector2,
 			lessonConnector,
 			disciplineConnector,
-			YearChangeConnector,
+			metaEventsConnector,
 		},
 		scoresChangesFeedWriter: scoresChangesFeedWriter,
 	}

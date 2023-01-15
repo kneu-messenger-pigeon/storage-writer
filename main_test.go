@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"strconv"
@@ -22,9 +23,9 @@ func TestRunApp(t *testing.T) {
 
 		running := true
 		go func() {
-			maxEndTime := time.Now().Add(time.Second * 5)
+			maxEndTime := time.Now().Add(time.Second)
 			for running && maxEndTime.After(time.Now()) &&
-				strings.Count(out.String(), "connector started") < ConnectorPoolSize {
+				!strings.Contains(out.String(), "connector started") {
 				time.Sleep(time.Millisecond)
 			}
 			_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
@@ -35,11 +36,14 @@ func TestRunApp(t *testing.T) {
 
 		assert.NoError(t, err, "Expected for TooManyError, got %s", err)
 
+		time.Sleep(time.Millisecond * 150)
 		outputString := out.String()
-		assert.Contains(t, outputString, "*main.YearChangeWriter connector started")
-		assert.Contains(t, outputString, "*main.ScoreWriter connector started")
+		fmt.Println(outputString)
+
+		assert.Contains(t, outputString, "*main.KafkaToRedisMetaEventsConnector connector started")
 		assert.Contains(t, outputString, "*main.LessonWriter connector started")
 		assert.Contains(t, outputString, "*main.DisciplineWriter connector started")
+		assert.Contains(t, outputString, "*main.ScoreWriter connector started")
 		assert.Equal(t, 2, strings.Count(outputString, "*main.ScoreWriter connector started"))
 	})
 
