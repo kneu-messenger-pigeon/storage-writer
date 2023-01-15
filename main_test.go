@@ -28,7 +28,7 @@ func TestRunApp(t *testing.T) {
 				strings.Count(out.String(), "connector started") >= (ConnectorPoolSize>>1) {
 				time.Sleep(time.Millisecond * 100)
 			}
-			time.Sleep(time.Millisecond * 50)
+			time.Sleep(time.Millisecond * 200)
 			_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		}()
 

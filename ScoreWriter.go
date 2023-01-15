@@ -87,12 +87,10 @@ func (writer *ScoreWriter) write(s any) (err error) {
 	}
 
 	if hasChanges && err == nil {
-		if err == nil {
-			var isMember bool
-			isMember, err = writer.redis.SIsMember(ctx, studentDisciplinesKey, event.DisciplineId).Result()
-			if !isMember {
-				err = writer.redis.SAdd(ctx, studentDisciplinesKey, event.DisciplineId).Err()
-			}
+		var isMember bool
+		isMember, err = writer.redis.SIsMember(ctx, studentDisciplinesKey, event.DisciplineId).Result()
+		if !isMember {
+			err = writer.redis.SAdd(ctx, studentDisciplinesKey, event.DisciplineId).Err()
 		}
 
 		writer.scoresChangesFeedWriter.addToQueue(*event)
