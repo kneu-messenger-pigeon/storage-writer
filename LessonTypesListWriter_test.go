@@ -15,11 +15,7 @@ func TestLessonTypesListWriter(t *testing.T) {
 		out := &bytes.Buffer{}
 		event := events.LessonTypesList{
 			Year: 2031,
-			List: []struct {
-				Id        int
-				ShortName string
-				LongName  string
-			}{
+			List: []events.LessonType{
 				{
 					Id:        20,
 					ShortName: "Лек",
@@ -55,11 +51,7 @@ func TestLessonTypesListWriter(t *testing.T) {
 
 		event := events.LessonTypesList{
 			Year: 2031,
-			List: []struct {
-				Id        int
-				ShortName string
-				LongName  string
-			}{
+			List: []events.LessonType{
 				{
 					Id:        20,
 					ShortName: "Лек",
@@ -95,11 +87,7 @@ func TestLessonTypesListWriter(t *testing.T) {
 
 		event := events.LessonTypesList{
 			Year: 2031,
-			List: []struct {
-				Id        int
-				ShortName string
-				LongName  string
-			}{
+			List: []events.LessonType{
 				{
 					Id:        20,
 					ShortName: "Лек",
@@ -127,16 +115,12 @@ func TestLessonTypesListWriter(t *testing.T) {
 		assert.NoError(t, redisMock.ExpectationsWereMet())
 	})
 
-	t.Run("error on bgscan", func(t *testing.T) {
+	t.Run("error on BgScan", func(t *testing.T) {
 		expectedError := errors.New("expected error")
 		out := &bytes.Buffer{}
 		event := events.LessonTypesList{
 			Year: 2031,
-			List: []struct {
-				Id        int
-				ShortName string
-				LongName  string
-			}{
+			List: []events.LessonType{
 				{
 					Id:        20,
 					ShortName: "Лек",

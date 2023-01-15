@@ -28,6 +28,7 @@ func TestRunApp(t *testing.T) {
 				!strings.Contains(out.String(), "connector started") {
 				time.Sleep(time.Millisecond)
 			}
+			time.Sleep(time.Millisecond * 100)
 			_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		}()
 
@@ -36,7 +37,7 @@ func TestRunApp(t *testing.T) {
 
 		assert.NoError(t, err, "Expected for TooManyError, got %s", err)
 
-		time.Sleep(time.Millisecond * 150)
+		time.Sleep(time.Millisecond * 300)
 		outputString := out.String()
 		fmt.Println(outputString)
 

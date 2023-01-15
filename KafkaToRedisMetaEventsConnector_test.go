@@ -66,6 +66,13 @@ func TestKafkaToRedisMetaEventsConnector(t *testing.T) {
 		out := &bytes.Buffer{}
 		event := events.LessonTypesList{
 			Year: 2035,
+			List: []events.LessonType{
+				{
+					Id:        20,
+					ShortName: "Лек",
+					LongName:  "Лекція",
+				},
+			},
 		}
 		payload, _ := json.Marshal(event)
 		message := kafka.Message{
