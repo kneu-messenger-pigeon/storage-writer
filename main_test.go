@@ -26,9 +26,9 @@ func TestRunApp(t *testing.T) {
 			maxEndTime := time.Now().Add(time.Second)
 			for running && maxEndTime.After(time.Now()) &&
 				strings.Count(out.String(), "connector started") >= (ConnectorPoolSize>>1) {
-				time.Sleep(time.Millisecond * 100)
+				time.Sleep(time.Millisecond * 200)
 			}
-			time.Sleep(time.Millisecond * 200)
+			time.Sleep(time.Millisecond * 300)
 			_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		}()
 
