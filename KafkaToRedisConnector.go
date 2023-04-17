@@ -31,7 +31,7 @@ func (connector *KafkaToRedisConnector) execute(ctx context.Context, wg *sync.Wa
 	var messagesToCommit []kafka.Message
 	var lastWriteTimestamp int64
 	var fetchContext context.Context
-	var fetchContextCancel context.CancelFunc
+	var fetchContextCancel = func() {}
 
 	connector.writer.setRedis(connector.redis)
 	expectedMessageKey := connector.writer.getExpectedMessageKey()
@@ -45,11 +45,10 @@ func (connector *KafkaToRedisConnector) execute(ctx context.Context, wg *sync.Wa
 	fmt.Fprintf(connector.out, "%T connector started \n", connector.writer)
 
 	for ctx.Err() == nil {
-		if len(messagesToCommit) != 0 {
-			fetchContext, fetchContextCancel = context.WithTimeout(ctx, time.Second*10)
-		} else {
+		if len(messagesToCommit) == 0 {
 			fetchContext = ctx
-			fetchContextCancel = func() {}
+		} else if fetchContext == nil || fetchContext.Err() != nil {
+			fetchContext, fetchContextCancel = context.WithTimeout(ctx, time.Second*60)
 		}
 
 		message, err = connector.reader.FetchMessage(fetchContext)
@@ -78,8 +77,8 @@ func (connector *KafkaToRedisConnector) execute(ctx context.Context, wg *sync.Wa
 		if err != nil && err != context.Canceled {
 			fmt.Fprintf(connector.out, "%T error: %v \n", connector.writer, err)
 		}
-		fetchContextCancel()
 	}
+	fetchContextCancel()
 
 	wg.Done()
 }
