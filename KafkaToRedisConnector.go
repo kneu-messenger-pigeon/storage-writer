@@ -30,7 +30,7 @@ func (connector *KafkaToRedisConnector) execute(ctx context.Context, wg *sync.Wa
 	var message kafka.Message
 	var messagesToCommit []kafka.Message
 	var lastWriteTimestamp int64
-	var fetchContext context.Context
+	var fetchContext = ctx
 	var fetchContextCancel = func() {}
 
 	connector.writer.setRedis(connector.redis)
@@ -45,12 +45,6 @@ func (connector *KafkaToRedisConnector) execute(ctx context.Context, wg *sync.Wa
 	fmt.Fprintf(connector.out, "%T connector started \n", connector.writer)
 
 	for ctx.Err() == nil {
-		if len(messagesToCommit) == 0 {
-			fetchContext = ctx
-		} else if fetchContext == nil || fetchContext.Err() != nil {
-			fetchContext, fetchContextCancel = context.WithTimeout(ctx, time.Second*60)
-		}
-
 		message, err = connector.reader.FetchMessage(fetchContext)
 		if err == nil && expectedMessageKey == string(message.Key) {
 			err = json.Unmarshal(message.Value, &event)
@@ -59,6 +53,10 @@ func (connector *KafkaToRedisConnector) execute(ctx context.Context, wg *sync.Wa
 			}
 		}
 		if err == nil {
+			if len(messagesToCommit) == 0 {
+				fetchContext, fetchContextCancel = context.WithTimeout(ctx, time.Second*60)
+			}
+
 			messagesToCommit = append(messagesToCommit, message)
 			lastWriteTimestamp = time.Now().Unix()
 		}
@@ -71,6 +69,7 @@ func (connector *KafkaToRedisConnector) execute(ctx context.Context, wg *sync.Wa
 			fmt.Fprintf(connector.out, "%T Commit %d messages (err: %v) \n", connector.writer, len(messagesToCommit), err)
 			if err == nil {
 				messagesToCommit = []kafka.Message{}
+				fetchContext = ctx
 			}
 		}
 
