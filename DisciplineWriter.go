@@ -91,7 +91,9 @@ func clearDisciplineName(name string) string {
 	name = strings.TrimLeft(name, "_-`.  #&$«(")
 	name = removeDuplicateSpaces.ReplaceAllString(name, " ")
 
-	name = ukrainianToUpper.String(name[:1]) + name[1:]
+	if len(name) != 0 {
+		name = ukrainianToUpper.String(name[:1]) + name[1:]
+	}
 
 	name = strings.Replace(name, "1 С:", "1С:", 1)
 	name = strings.Replace(name, "іноз мова", "іноземна мова", 1)
