@@ -11,15 +11,21 @@ import (
 	"time"
 )
 
+type scoreValue struct {
+	Value     float32
+	IsAbsent  bool
+	IsDeleted bool
+}
+
 type ScoresChangesFeedWriterInterface interface {
 	execute(ctx context.Context)
-	addToQueue(event events.ScoreEvent)
+	addToQueue(event events.ScoreEvent, previousValue scoreValue)
 }
 
 type ScoresChangesFeedWriter struct {
 	out             io.Writer
 	writer          events.WriterInterface
-	eventQueue      []events.ScoreEvent
+	eventQueue      []events.ScoreChangedEvent
 	eventQueueMutex sync.Mutex
 }
 
@@ -60,8 +66,13 @@ func (writer *ScoresChangesFeedWriter) writeEvents() error {
 	return err
 }
 
-func (writer *ScoresChangesFeedWriter) addToQueue(event events.ScoreEvent) {
+func (writer *ScoresChangesFeedWriter) addToQueue(event events.ScoreEvent, previousValue scoreValue) {
+	changedEvent := events.ScoreChangedEvent{
+		ScoreEvent: event,
+		Previous:   previousValue,
+	}
+
 	writer.eventQueueMutex.Lock()
-	writer.eventQueue = append(writer.eventQueue, event)
+	writer.eventQueue = append(writer.eventQueue, changedEvent)
 	writer.eventQueueMutex.Unlock()
 }

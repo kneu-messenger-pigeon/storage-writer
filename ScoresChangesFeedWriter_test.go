@@ -20,18 +20,25 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 		out := &bytes.Buffer{}
 
 		expectedEvent := events.ScoreChangedEvent{
-			Id:           112233,
-			StudentId:    123,
-			LessonId:     150,
-			LessonPart:   1,
-			DisciplineId: 234,
-			Year:         2028,
-			Semester:     1,
-			Value:        2.5,
-			IsAbsent:     false,
-			IsDeleted:    false,
-			UpdatedAt:    time.Date(2028, time.Month(11), 18, 14, 30, 40, 0, time.Local),
-			SyncedAt:     time.Date(2028, time.Month(11), 18, 14, 35, 13, 0, time.Local),
+			ScoreEvent: events.ScoreEvent{
+				Id:           112233,
+				StudentId:    123,
+				LessonId:     150,
+				LessonPart:   1,
+				DisciplineId: 234,
+				Year:         2028,
+				Semester:     1,
+				Value:        2.5,
+				IsAbsent:     false,
+				IsDeleted:    false,
+				UpdatedAt:    time.Date(2028, time.Month(11), 18, 14, 30, 40, 0, time.Local),
+				SyncedAt:     time.Date(2028, time.Month(11), 18, 14, 35, 13, 0, time.Local),
+			},
+			Previous: scoreValue{
+				Value:     0,
+				IsAbsent:  false,
+				IsDeleted: true,
+			},
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*10)
@@ -54,33 +61,38 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 			writer: writer,
 		}
 
-		scoreEvent := scoreChangedEventToScoreEvent(expectedEvent)
-
 		go scoresChangesFeedWriter.execute(ctx)
-		scoresChangesFeedWriter.addToQueue(scoreEvent)
+		scoresChangesFeedWriter.addToQueue(expectedEvent.ScoreEvent, expectedEvent.Previous)
 		<-ctx.Done()
 	})
 
 	t.Run("writeFeed - error write to Kafka", func(t *testing.T) {
 		expectedError := errors.New("expected error")
 		expectedEvent := events.ScoreChangedEvent{
-			Id:           112233,
-			StudentId:    123,
-			LessonId:     150,
-			LessonPart:   1,
-			DisciplineId: 234,
-			Year:         2028,
-			Semester:     1,
-			Value:        2.5,
-			IsAbsent:     false,
-			IsDeleted:    false,
-			UpdatedAt:    time.Date(2028, time.Month(11), 18, 14, 30, 40, 0, time.Local),
-			SyncedAt:     time.Date(2028, time.Month(11), 18, 14, 35, 13, 0, time.Local),
+			ScoreEvent: events.ScoreEvent{
+				Id:           112233,
+				StudentId:    123,
+				LessonId:     150,
+				LessonPart:   1,
+				DisciplineId: 234,
+				Year:         2028,
+				Semester:     1,
+				Value:        2.5,
+				IsAbsent:     false,
+				IsDeleted:    false,
+				UpdatedAt:    time.Date(2028, time.Month(11), 18, 14, 30, 40, 0, time.Local),
+				SyncedAt:     time.Date(2028, time.Month(11), 18, 14, 35, 13, 0, time.Local),
+			},
+			Previous: scoreValue{
+				Value:     0,
+				IsAbsent:  false,
+				IsDeleted: true,
+			},
 		}
 
 		out := &bytes.Buffer{}
 		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*10)
-		var savedQueue []events.ScoreEvent
+		var savedQueue []events.ScoreChangedEvent
 
 		writer := events.NewMockWriterInterface(t)
 		scoresChangesFeedWriter := ScoresChangesFeedWriter{
@@ -90,9 +102,9 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 
 		expectedEventMessage := func(message kafka.Message) bool {
 			if ctx.Err() != nil {
-				savedQueue = make([]events.ScoreEvent, len(scoresChangesFeedWriter.eventQueue))
+				savedQueue = make([]events.ScoreChangedEvent, len(scoresChangesFeedWriter.eventQueue))
 				copy(savedQueue, scoresChangesFeedWriter.eventQueue)
-				scoresChangesFeedWriter.eventQueue = make([]events.ScoreEvent, 0)
+				scoresChangesFeedWriter.eventQueue = make([]events.ScoreChangedEvent, 0)
 			}
 
 			cancel()
@@ -105,31 +117,11 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 		}
 		writer.On("WriteMessages", matchContext, mock.MatchedBy(expectedEventMessage)).Return(expectedError)
 
-		scoreEvent := scoreChangedEventToScoreEvent(expectedEvent)
-
-		scoresChangesFeedWriter.addToQueue(scoreEvent)
+		scoresChangesFeedWriter.addToQueue(expectedEvent.ScoreEvent, expectedEvent.Previous)
 		scoresChangesFeedWriter.execute(ctx)
 		<-ctx.Done()
 
 		assert.Equal(t, 1, len(savedQueue))
-		assert.Equal(t, scoreEvent, savedQueue[0])
+		assert.Equal(t, expectedEvent, savedQueue[0])
 	})
-}
-
-func scoreChangedEventToScoreEvent(scoreChangedEvent events.ScoreChangedEvent) events.ScoreEvent {
-	return events.ScoreEvent{
-		Id:           scoreChangedEvent.Id,
-		StudentId:    scoreChangedEvent.StudentId,
-		LessonId:     scoreChangedEvent.LessonId,
-		LessonPart:   scoreChangedEvent.LessonPart,
-		DisciplineId: scoreChangedEvent.DisciplineId,
-		Year:         scoreChangedEvent.Year,
-		Semester:     scoreChangedEvent.Semester,
-		Value:        scoreChangedEvent.Value,
-		IsAbsent:     scoreChangedEvent.IsAbsent,
-		IsDeleted:    scoreChangedEvent.IsDeleted,
-		UpdatedAt:    scoreChangedEvent.UpdatedAt,
-		SyncedAt:     scoreChangedEvent.SyncedAt,
-	}
-
 }

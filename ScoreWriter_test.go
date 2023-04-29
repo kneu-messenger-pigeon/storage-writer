@@ -58,7 +58,11 @@ func TestWriteScore(t *testing.T) {
 		redisMock.ExpectSAdd(studentDisciplinesKey, uint(234)).SetVal(1)
 
 		scoresChangesFeedWriter := NewMockScoresChangesFeedWriterInterface(t)
-		scoresChangesFeedWriter.On("addToQueue", event)
+		scoresChangesFeedWriter.On("addToQueue", event, scoreValue{
+			Value:     0,
+			IsAbsent:  false,
+			IsDeleted: true,
+		})
 
 		scoreWriter := ScoreWriter{
 			scoresChangesFeedWriter: scoresChangesFeedWriter,
@@ -108,7 +112,11 @@ func TestWriteScore(t *testing.T) {
 		redisMock.ExpectSAdd(studentDisciplinesKey, uint(234)).SetVal(1)
 
 		scoresChangesFeedWriter := NewMockScoresChangesFeedWriterInterface(t)
-		scoresChangesFeedWriter.On("addToQueue", event)
+		scoresChangesFeedWriter.On("addToQueue", event, scoreValue{
+			Value:     0,
+			IsAbsent:  false,
+			IsDeleted: true,
+		})
 
 		scoreWriter := ScoreWriter{
 			scoresChangesFeedWriter: scoresChangesFeedWriter,
@@ -248,7 +256,11 @@ func TestWriteScore(t *testing.T) {
 		redisMock.ExpectSIsMember(studentDisciplinesKey, uint(234)).SetVal(true)
 
 		scoresChangesFeedWriter := NewMockScoresChangesFeedWriterInterface(t)
-		scoresChangesFeedWriter.On("addToQueue", event)
+		scoresChangesFeedWriter.On("addToQueue", event, scoreValue{
+			Value:     3.5,
+			IsAbsent:  false,
+			IsDeleted: false,
+		})
 
 		scoreWriter := ScoreWriter{
 			scoresChangesFeedWriter: scoresChangesFeedWriter,
@@ -301,7 +313,11 @@ func TestWriteScore(t *testing.T) {
 		redisMock.ExpectSAdd(studentDisciplinesKey, uint(234)).SetVal(1)
 
 		scoresChangesFeedWriter := NewMockScoresChangesFeedWriterInterface(t)
-		scoresChangesFeedWriter.On("addToQueue", event)
+		scoresChangesFeedWriter.On("addToQueue", event, scoreValue{
+			Value:     7,
+			IsAbsent:  false,
+			IsDeleted: false,
+		})
 
 		scoreWriter := ScoreWriter{
 			scoresChangesFeedWriter: scoresChangesFeedWriter,

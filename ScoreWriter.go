@@ -41,6 +41,7 @@ func (writer *ScoreWriter) write(s any) (err error) {
 	studentKey := strconv.Itoa(int(event.StudentId))
 
 	hasChanges := false
+	var previousValue scoreValue
 	ctx := context.Background()
 	writeValueFunc := func(tx *redis.Tx) (err error) {
 		storedValue, err := writer.redis.HGet(ctx, studentDisciplineScoresKey, lessonKey).Float64()
@@ -74,6 +75,14 @@ func (writer *ScoreWriter) write(s any) (err error) {
 		})
 		if err == nil {
 			hasChanges = true
+			previousValue = scoreValue{
+				IsAbsent:  storedValue == IsAbsentScoreValue,
+				IsDeleted: storedIsDeleted,
+			}
+
+			if storedValue != IsAbsentScoreValue {
+				previousValue.Value = float32(storedValue)
+			}
 		}
 		return err
 	}
@@ -93,7 +102,7 @@ func (writer *ScoreWriter) write(s any) (err error) {
 			err = writer.redis.SAdd(ctx, studentDisciplinesKey, event.DisciplineId).Err()
 		}
 
-		writer.scoresChangesFeedWriter.addToQueue(*event)
+		writer.scoresChangesFeedWriter.addToQueue(*event, previousValue)
 	}
 	return err
 }
