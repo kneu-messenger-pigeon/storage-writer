@@ -217,6 +217,50 @@ func TestWriteScore(t *testing.T) {
 		scoresChangesFeedWriter.AssertNotCalled(t, "addToQueue")
 	})
 
+	t.Run("write not changed deleted score", func(t *testing.T) {
+		event := events.ScoreEvent{
+			Id:           112233,
+			StudentId:    123,
+			LessonId:     150,
+			LessonPart:   1,
+			DisciplineId: 234,
+			Year:         2028,
+			Semester:     1,
+			Value:        2.5,
+			IsAbsent:     false,
+			IsDeleted:    true,
+			UpdatedAt:    time.Date(2028, time.Month(11), 12, 14, 30, 40, 0, time.Local),
+			SyncedAt:     time.Date(2028, time.Month(11), 12, 14, 35, 13, 0, time.Local),
+		}
+
+		redis, redisMock := redismock.NewClientMock()
+
+		studentDisciplineScoresKey := "2028:1:scores:123:234"
+		lessonKey := "150:1"
+
+		redisMock.MatchExpectationsInOrder(true)
+
+		redisMock.ExpectWatch(studentDisciplineScoresKey)
+		redisMock.ExpectHGet(studentDisciplineScoresKey, lessonKey).RedisNil()
+
+		scoresChangesFeedWriter := NewMockScoresChangesFeedWriterInterface(t)
+
+		scoreWriter := ScoreWriter{
+			scoresChangesFeedWriter: scoresChangesFeedWriter,
+		}
+		scoreWriter.setRedis(redis)
+
+		err := scoreWriter.write(&event)
+
+		assert.IsType(t, scoreWriter.getExpectedEventType(), &event)
+		assert.Equal(t, scoreWriter.getExpectedMessageKey(), events.ScoreEventName)
+
+		assert.NoError(t, err)
+		assert.NoError(t, redisMock.ExpectationsWereMet())
+
+		scoresChangesFeedWriter.AssertNotCalled(t, "addToQueue")
+	})
+
 	t.Run("delete score", func(t *testing.T) {
 		event := events.ScoreEvent{
 			Id:           112233,
