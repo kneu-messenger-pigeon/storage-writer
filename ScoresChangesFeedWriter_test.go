@@ -19,13 +19,7 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 	t.Run("writeFeed", func(t *testing.T) {
 		out := &bytes.Buffer{}
 
-		expectedDiscipline := events.Discipline{
-			Id:   987,
-			Name: "Право та беззаконня",
-		}
-
 		expectedEvent := events.ScoreChangedEvent{
-			Discipline: expectedDiscipline,
 			ScoreEvent: events.ScoreEvent{
 				Id:           112233,
 				StudentId:    123,
@@ -48,9 +42,6 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 				IsDeleted: true,
 			},
 		}
-
-		disciplineRepository := NewMockDisciplineRepositoryInterface(t)
-		disciplineRepository.On("GetDiscipline", expectedEvent.Year, expectedEvent.DisciplineId).Return(expectedDiscipline)
 
 		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*10)
 
@@ -68,9 +59,8 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 		writer.On("WriteMessages", matchContext, mock.MatchedBy(expectedEventMessage)).Return(nil)
 
 		scoresChangesFeedWriter := ScoresChangesFeedWriter{
-			out:                  out,
-			writer:               writer,
-			disciplineRepository: disciplineRepository,
+			out:    out,
+			writer: writer,
 		}
 
 		go scoresChangesFeedWriter.execute(ctx)
@@ -79,14 +69,8 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 	})
 
 	t.Run("writeFeed - error write to Kafka", func(t *testing.T) {
-		expectedDiscipline := events.Discipline{
-			Id:   987,
-			Name: "Право та беззаконня",
-		}
-
 		expectedError := errors.New("expected error")
 		expectedEvent := events.ScoreChangedEvent{
-			Discipline: expectedDiscipline,
 			ScoreEvent: events.ScoreEvent{
 				Id:           112233,
 				StudentId:    123,
@@ -110,18 +94,14 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 			},
 		}
 
-		disciplineRepository := NewMockDisciplineRepositoryInterface(t)
-		disciplineRepository.On("GetDiscipline", expectedEvent.Year, expectedEvent.DisciplineId).Return(expectedDiscipline)
-
 		out := &bytes.Buffer{}
 		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*10)
 		var savedQueue []events.ScoreChangedEvent
 
 		writer := events.NewMockWriterInterface(t)
 		scoresChangesFeedWriter := ScoresChangesFeedWriter{
-			out:                  out,
-			writer:               writer,
-			disciplineRepository: disciplineRepository,
+			out:    out,
+			writer: writer,
 		}
 
 		expectedEventMessage := func(message kafka.Message) bool {
