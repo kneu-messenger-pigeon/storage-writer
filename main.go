@@ -43,6 +43,7 @@ func runApp(out io.Writer) error {
 			Topic:    "scores_changes_feed",
 			Balancer: &kafka.LeastBytes{},
 		},
+		disciplineRepository: &DisciplineRepository{redisClient},
 	}
 
 	scoreConnector1 := &KafkaToRedisConnector{

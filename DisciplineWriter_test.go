@@ -10,9 +10,11 @@ import (
 func TestWriteDiscipline(t *testing.T) {
 	t.Run("write discipline", func(t *testing.T) {
 		event := events.DisciplineEvent{
-			Id:   200,
-			Name: "Фінанси (модуль 1 Гроші та кредит, модуль 2 Фінанси)",
 			Year: 2045,
+			Discipline: events.Discipline{
+				Id:   200,
+				Name: "Фінанси (модуль 1 Гроші та кредит, модуль 2 Фінанси)",
+			},
 		}
 
 		redis, redisMock := redismock.NewClientMock()
@@ -33,9 +35,11 @@ func TestWriteDiscipline(t *testing.T) {
 
 	t.Run("discipline already exists", func(t *testing.T) {
 		event := events.DisciplineEvent{
-			Id:   200,
-			Name: "Фінанси (модуль 1 Гроші та кредит, модуль 2 Фінанси)",
 			Year: 2045,
+			Discipline: events.Discipline{
+				Id:   200,
+				Name: "Фінанси (модуль 1 Гроші та кредит, модуль 2 Фінанси)",
+			},
 		}
 
 		redis, redisMock := redismock.NewClientMock()

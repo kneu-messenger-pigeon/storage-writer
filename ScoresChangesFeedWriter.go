@@ -17,10 +17,11 @@ type ScoresChangesFeedWriterInterface interface {
 }
 
 type ScoresChangesFeedWriter struct {
-	out             io.Writer
-	writer          events.WriterInterface
-	eventQueue      []events.ScoreChangedEvent
-	eventQueueMutex sync.Mutex
+	out                  io.Writer
+	disciplineRepository DisciplineRepositoryInterface
+	writer               events.WriterInterface
+	eventQueue           []events.ScoreChangedEvent
+	eventQueueMutex      sync.Mutex
 }
 
 func (writer *ScoresChangesFeedWriter) execute(ctx context.Context) {
@@ -43,7 +44,6 @@ func (writer *ScoresChangesFeedWriter) writeEvents() error {
 	count := len(writer.eventQueue)
 	messages := make([]kafka.Message, count)
 	for i := 0; i < count; i++ {
-		// events.ScoreChangedEvent is equal to events.ScoreEvent so JSON-representative will be same for both events.
 		payload, _ = json.Marshal(writer.eventQueue[i])
 		messages[i] = kafka.Message{
 			Key:   []byte(events.ScoreChangedEventName),
@@ -62,6 +62,7 @@ func (writer *ScoresChangesFeedWriter) writeEvents() error {
 
 func (writer *ScoresChangesFeedWriter) addToQueue(event events.ScoreEvent, previousValue events.ScoreValue) {
 	changedEvent := events.ScoreChangedEvent{
+		Discipline: writer.disciplineRepository.GetDiscipline(event.Year, event.DisciplineId),
 		ScoreEvent: event,
 		Previous:   previousValue,
 	}

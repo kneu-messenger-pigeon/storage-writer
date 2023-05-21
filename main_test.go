@@ -25,7 +25,7 @@ func TestRunApp(t *testing.T) {
 		go func() {
 			maxEndTime := time.Now().Add(time.Second * 2)
 			for running && maxEndTime.After(time.Now()) &&
-				strings.Count(out.String(), "connector started") >= (ConnectorPoolSize>>1) {
+				strings.Count(out.String(), "connector started") >= ConnectorPoolSize {
 				time.Sleep(time.Millisecond * 200)
 			}
 			time.Sleep(time.Millisecond * 300)

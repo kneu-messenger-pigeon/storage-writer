@@ -48,6 +48,10 @@ github.com/kneu-messenger-pigeon/events v0.1.29 h1:uJtPueYTU5JwiSpC4iGrkzOKCAqsY
 github.com/kneu-messenger-pigeon/events v0.1.29/go.mod h1:yPgqpO/+XVOZmTdH8BB4wbE+2/keLNhjorMVzJwHQL8=
 github.com/kneu-messenger-pigeon/events v0.1.30 h1:oMfziG1azDVCQAcIi1mmZV1sG+zXJ6uHD6KJxDLurZI=
 github.com/kneu-messenger-pigeon/events v0.1.30/go.mod h1:yPgqpO/+XVOZmTdH8BB4wbE+2/keLNhjorMVzJwHQL8=
+github.com/kneu-messenger-pigeon/events v0.1.31 h1:Pw8Xt4ntyt9jG+5d7HBXOPmXqMuvLXBFicBFH8PKrrU=
+github.com/kneu-messenger-pigeon/events v0.1.31/go.mod h1:yPgqpO/+XVOZmTdH8BB4wbE+2/keLNhjorMVzJwHQL8=
+github.com/kneu-messenger-pigeon/events v0.1.32 h1:xkLP02odC+Oy5NIjrFCsxQo9J+WRDafecKgdxRIX5q4=
+github.com/kneu-messenger-pigeon/events v0.1.32/go.mod h1:yPgqpO/+XVOZmTdH8BB4wbE+2/keLNhjorMVzJwHQL8=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/nxadm/tail v1.4.8 h1:nPr65rt6Y5JFSKQO7qToXr7pePgD6Gwiw05lkbyAQTE=
 github.com/nxadm/tail v1.4.8/go.mod h1:+ncqLTQzXmGhMZNUePPaPqPvBxHAIsmXswZKocGu+AU=

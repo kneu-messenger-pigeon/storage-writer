@@ -22,9 +22,11 @@ func TestKafkaToRedisConnector(t *testing.T) {
 		out := &bytes.Buffer{}
 
 		event := events.DisciplineEvent{
-			Id:   1,
-			Name: "test discipline name",
 			Year: 2035,
+			Discipline: events.Discipline{
+				Id:   1,
+				Name: "test discipline name",
+			},
 		}
 
 		payload, _ := json.Marshal(event)
@@ -74,9 +76,11 @@ func TestKafkaToRedisConnector(t *testing.T) {
 		out := &bytes.Buffer{}
 
 		event := events.DisciplineEvent{
-			Id:   1,
-			Name: "test discipline name",
 			Year: 2035,
+			Discipline: events.Discipline{
+				Id:   1,
+				Name: "test discipline name",
+			},
 		}
 
 		payload, _ := json.Marshal(event)
