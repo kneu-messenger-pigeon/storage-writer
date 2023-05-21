@@ -47,6 +47,9 @@ func TestWriteLesson(t *testing.T) {
 		}
 
 		redis, redisMock := redismock.NewClientMock()
+		redisMock.MatchExpectationsInOrder(true)
+
+		redisMock.ExpectSetEx("2029:2:deleted-lessons:250:650", "3004265", time.Hour*24).SetVal("OK")
 		redisMock.ExpectHDel("2029:2:lessons:250", "650").SetVal(1)
 
 		lessonWriter := LessonWriter{}

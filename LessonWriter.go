@@ -6,6 +6,7 @@ import (
 	"github.com/go-redis/redis/v9"
 	"github.com/kneu-messenger-pigeon/events"
 	"strconv"
+	"time"
 )
 
 type LessonWriter struct {
@@ -30,10 +31,16 @@ func (writer *LessonWriter) write(s any) error {
 	disciplineKey := fmt.Sprintf("%d:%d:lessons:%d", event.Year, event.Semester, event.DisciplineId)
 	lessonKey := strconv.Itoa(int(event.Id))
 
+	value := fmt.Sprintf("%s%d", event.Date.Format("060102"), event.TypeId)
 	if event.IsDeleted {
+		deletedLessonKey := fmt.Sprintf(
+			"%d:%d:deleted-lessons:%d:%d",
+			event.Year, event.Semester, event.DisciplineId, event.Id,
+		)
+		writer.redis.SetEx(context.Background(), deletedLessonKey, value, time.Hour*24)
+
 		return writer.redis.HDel(context.Background(), disciplineKey, lessonKey).Err()
 	} else {
-		value := fmt.Sprintf("%s%d", event.Date.Format("060102"), event.TypeId)
 		return writer.redis.HSet(context.Background(), disciplineKey, lessonKey, value).Err()
 	}
 }
