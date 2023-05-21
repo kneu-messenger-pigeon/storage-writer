@@ -27,11 +27,13 @@ func TestWriteScore(t *testing.T) {
 			DisciplineId: 234,
 			Year:         2028,
 			Semester:     1,
-			Value:        2.5,
-			IsAbsent:     false,
-			IsDeleted:    false,
-			UpdatedAt:    time.Date(2028, time.Month(11), 12, 14, 30, 40, 0, time.Local),
-			SyncedAt:     time.Date(2028, time.Month(11), 12, 14, 35, 13, 0, time.Local),
+			ScoreValue: events.ScoreValue{
+				Value:     2.5,
+				IsAbsent:  false,
+				IsDeleted: false,
+			},
+			UpdatedAt: time.Date(2028, time.Month(11), 12, 14, 30, 40, 0, time.Local),
+			SyncedAt:  time.Date(2028, time.Month(11), 12, 14, 35, 13, 0, time.Local),
 		}
 
 		redis, redisMock := redismock.NewClientMock()
@@ -58,7 +60,7 @@ func TestWriteScore(t *testing.T) {
 		redisMock.ExpectSAdd(studentDisciplinesKey, uint(234)).SetVal(1)
 
 		scoresChangesFeedWriter := NewMockScoresChangesFeedWriterInterface(t)
-		scoresChangesFeedWriter.On("addToQueue", event, scoreValue{
+		scoresChangesFeedWriter.On("addToQueue", event, events.ScoreValue{
 			Value:     0,
 			IsAbsent:  false,
 			IsDeleted: true,
@@ -84,11 +86,13 @@ func TestWriteScore(t *testing.T) {
 			DisciplineId: 234,
 			Year:         2028,
 			Semester:     1,
-			Value:        0,
-			IsAbsent:     true,
-			IsDeleted:    false,
-			UpdatedAt:    time.Date(2028, time.Month(11), 12, 14, 30, 40, 0, time.Local),
-			SyncedAt:     time.Date(2028, time.Month(11), 12, 14, 35, 13, 0, time.Local),
+			ScoreValue: events.ScoreValue{
+				Value:     0,
+				IsAbsent:  true,
+				IsDeleted: false,
+			},
+			UpdatedAt: time.Date(2028, time.Month(11), 12, 14, 30, 40, 0, time.Local),
+			SyncedAt:  time.Date(2028, time.Month(11), 12, 14, 35, 13, 0, time.Local),
 		}
 
 		redis, redisMock := redismock.NewClientMock()
@@ -112,7 +116,7 @@ func TestWriteScore(t *testing.T) {
 		redisMock.ExpectSAdd(studentDisciplinesKey, uint(234)).SetVal(1)
 
 		scoresChangesFeedWriter := NewMockScoresChangesFeedWriterInterface(t)
-		scoresChangesFeedWriter.On("addToQueue", event, scoreValue{
+		scoresChangesFeedWriter.On("addToQueue", event, events.ScoreValue{
 			Value:     0,
 			IsAbsent:  false,
 			IsDeleted: true,
@@ -141,11 +145,13 @@ func TestWriteScore(t *testing.T) {
 			DisciplineId: 234,
 			Year:         2028,
 			Semester:     1,
-			Value:        2.5,
-			IsAbsent:     false,
-			IsDeleted:    false,
-			UpdatedAt:    time.Date(2028, time.Month(11), 12, 14, 30, 40, 0, time.Local),
-			SyncedAt:     time.Date(2028, time.Month(11), 12, 14, 35, 13, 0, time.Local),
+			ScoreValue: events.ScoreValue{
+				Value:     2.5,
+				IsAbsent:  false,
+				IsDeleted: false,
+			},
+			UpdatedAt: time.Date(2028, time.Month(11), 12, 14, 30, 40, 0, time.Local),
+			SyncedAt:  time.Date(2028, time.Month(11), 12, 14, 35, 13, 0, time.Local),
 		}
 
 		redis, redisMock := redismock.NewClientMock()
@@ -185,11 +191,13 @@ func TestWriteScore(t *testing.T) {
 			DisciplineId: 234,
 			Year:         2028,
 			Semester:     1,
-			Value:        0,
-			IsAbsent:     true,
-			IsDeleted:    false,
-			UpdatedAt:    time.Date(2028, time.Month(11), 12, 14, 30, 40, 0, time.Local),
-			SyncedAt:     time.Date(2028, time.Month(11), 12, 14, 35, 13, 0, time.Local),
+			ScoreValue: events.ScoreValue{
+				Value:     0,
+				IsAbsent:  true,
+				IsDeleted: false,
+			},
+			UpdatedAt: time.Date(2028, time.Month(11), 12, 14, 30, 40, 0, time.Local),
+			SyncedAt:  time.Date(2028, time.Month(11), 12, 14, 35, 13, 0, time.Local),
 		}
 
 		redis, redisMock := redismock.NewClientMock()
@@ -226,11 +234,13 @@ func TestWriteScore(t *testing.T) {
 			DisciplineId: 234,
 			Year:         2028,
 			Semester:     1,
-			Value:        2.5,
-			IsAbsent:     false,
-			IsDeleted:    true,
-			UpdatedAt:    time.Date(2028, time.Month(11), 12, 14, 30, 40, 0, time.Local),
-			SyncedAt:     time.Date(2028, time.Month(11), 12, 14, 35, 13, 0, time.Local),
+			ScoreValue: events.ScoreValue{
+				Value:     2.5,
+				IsAbsent:  false,
+				IsDeleted: true,
+			},
+			UpdatedAt: time.Date(2028, time.Month(11), 12, 14, 30, 40, 0, time.Local),
+			SyncedAt:  time.Date(2028, time.Month(11), 12, 14, 35, 13, 0, time.Local),
 		}
 
 		redis, redisMock := redismock.NewClientMock()
@@ -270,11 +280,13 @@ func TestWriteScore(t *testing.T) {
 			DisciplineId: 234,
 			Year:         2028,
 			Semester:     1,
-			Value:        0,
-			IsAbsent:     false,
-			IsDeleted:    true,
-			UpdatedAt:    time.Date(2028, time.Month(11), 12, 14, 30, 40, 0, time.Local),
-			SyncedAt:     time.Date(2028, time.Month(11), 12, 14, 35, 13, 0, time.Local),
+			ScoreValue: events.ScoreValue{
+				Value:     0,
+				IsAbsent:  false,
+				IsDeleted: true,
+			},
+			UpdatedAt: time.Date(2028, time.Month(11), 12, 14, 30, 40, 0, time.Local),
+			SyncedAt:  time.Date(2028, time.Month(11), 12, 14, 35, 13, 0, time.Local),
 		}
 
 		redis, redisMock := redismock.NewClientMock()
@@ -300,7 +312,7 @@ func TestWriteScore(t *testing.T) {
 		redisMock.ExpectSIsMember(studentDisciplinesKey, uint(234)).SetVal(true)
 
 		scoresChangesFeedWriter := NewMockScoresChangesFeedWriterInterface(t)
-		scoresChangesFeedWriter.On("addToQueue", event, scoreValue{
+		scoresChangesFeedWriter.On("addToQueue", event, events.ScoreValue{
 			Value:     3.5,
 			IsAbsent:  false,
 			IsDeleted: false,
@@ -326,11 +338,13 @@ func TestWriteScore(t *testing.T) {
 			DisciplineId: 234,
 			Year:         2028,
 			Semester:     1,
-			Value:        2.5,
-			IsAbsent:     false,
-			IsDeleted:    false,
-			UpdatedAt:    time.Date(2028, time.Month(11), 12, 14, 30, 40, 0, time.Local),
-			SyncedAt:     time.Date(2028, time.Month(11), 12, 14, 35, 13, 0, time.Local),
+			ScoreValue: events.ScoreValue{
+				Value:     2.5,
+				IsAbsent:  false,
+				IsDeleted: false,
+			},
+			UpdatedAt: time.Date(2028, time.Month(11), 12, 14, 30, 40, 0, time.Local),
+			SyncedAt:  time.Date(2028, time.Month(11), 12, 14, 35, 13, 0, time.Local),
 		}
 
 		redis, redisMock := redismock.NewClientMock()
@@ -357,7 +371,7 @@ func TestWriteScore(t *testing.T) {
 		redisMock.ExpectSAdd(studentDisciplinesKey, uint(234)).SetVal(1)
 
 		scoresChangesFeedWriter := NewMockScoresChangesFeedWriterInterface(t)
-		scoresChangesFeedWriter.On("addToQueue", event, scoreValue{
+		scoresChangesFeedWriter.On("addToQueue", event, events.ScoreValue{
 			Value:     7,
 			IsAbsent:  false,
 			IsDeleted: false,
@@ -385,11 +399,13 @@ func TestWriteScore(t *testing.T) {
 			DisciplineId: 234,
 			Year:         2028,
 			Semester:     1,
-			Value:        2.5,
-			IsAbsent:     false,
-			IsDeleted:    false,
-			UpdatedAt:    time.Date(2028, time.Month(11), 12, 14, 30, 40, 0, time.Local),
-			SyncedAt:     time.Date(2028, time.Month(11), 12, 14, 35, 13, 0, time.Local),
+			ScoreValue: events.ScoreValue{
+				Value:     2.5,
+				IsAbsent:  false,
+				IsDeleted: false,
+			},
+			UpdatedAt: time.Date(2028, time.Month(11), 12, 14, 30, 40, 0, time.Local),
+			SyncedAt:  time.Date(2028, time.Month(11), 12, 14, 35, 13, 0, time.Local),
 		}
 
 		redis, redisMock := redismock.NewClientMock()
@@ -428,11 +444,13 @@ func TestWriteScore(t *testing.T) {
 			DisciplineId: 234,
 			Year:         2028,
 			Semester:     1,
-			Value:        2.5,
-			IsAbsent:     false,
-			IsDeleted:    false,
-			UpdatedAt:    time.Date(2028, time.Month(11), 12, 14, 30, 40, 0, time.Local),
-			SyncedAt:     time.Date(2028, time.Month(11), 12, 14, 35, 13, 0, time.Local),
+			ScoreValue: events.ScoreValue{
+				Value:     2.5,
+				IsAbsent:  false,
+				IsDeleted: false,
+			},
+			UpdatedAt: time.Date(2028, time.Month(11), 12, 14, 30, 40, 0, time.Local),
+			SyncedAt:  time.Date(2028, time.Month(11), 12, 14, 35, 13, 0, time.Local),
 		}
 
 		redis, redisMock := redismock.NewClientMock()

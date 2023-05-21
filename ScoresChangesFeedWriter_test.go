@@ -28,13 +28,15 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 				DisciplineId: 234,
 				Year:         2028,
 				Semester:     1,
-				Value:        2.5,
-				IsAbsent:     false,
-				IsDeleted:    false,
-				UpdatedAt:    time.Date(2028, time.Month(11), 18, 14, 30, 40, 0, time.Local),
-				SyncedAt:     time.Date(2028, time.Month(11), 18, 14, 35, 13, 0, time.Local),
+				ScoreValue: events.ScoreValue{
+					Value:     2.5,
+					IsAbsent:  false,
+					IsDeleted: false,
+				},
+				UpdatedAt: time.Date(2028, time.Month(11), 18, 14, 30, 40, 0, time.Local),
+				SyncedAt:  time.Date(2028, time.Month(11), 18, 14, 35, 13, 0, time.Local),
 			},
-			Previous: scoreValue{
+			Previous: events.ScoreValue{
 				Value:     0,
 				IsAbsent:  false,
 				IsDeleted: true,
@@ -77,13 +79,15 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 				DisciplineId: 234,
 				Year:         2028,
 				Semester:     1,
-				Value:        2.5,
-				IsAbsent:     false,
-				IsDeleted:    false,
-				UpdatedAt:    time.Date(2028, time.Month(11), 18, 14, 30, 40, 0, time.Local),
-				SyncedAt:     time.Date(2028, time.Month(11), 18, 14, 35, 13, 0, time.Local),
+				ScoreValue: events.ScoreValue{
+					Value:     2.5,
+					IsAbsent:  false,
+					IsDeleted: false,
+				},
+				UpdatedAt: time.Date(2028, time.Month(11), 18, 14, 30, 40, 0, time.Local),
+				SyncedAt:  time.Date(2028, time.Month(11), 18, 14, 35, 13, 0, time.Local),
 			},
-			Previous: scoreValue{
+			Previous: events.ScoreValue{
 				Value:     0,
 				IsAbsent:  false,
 				IsDeleted: true,

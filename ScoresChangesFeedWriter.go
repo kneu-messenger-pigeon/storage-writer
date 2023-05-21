@@ -11,15 +11,9 @@ import (
 	"time"
 )
 
-type scoreValue struct {
-	Value     float32
-	IsAbsent  bool
-	IsDeleted bool
-}
-
 type ScoresChangesFeedWriterInterface interface {
 	execute(ctx context.Context)
-	addToQueue(event events.ScoreEvent, previousValue scoreValue)
+	addToQueue(event events.ScoreEvent, previousValue events.ScoreValue)
 }
 
 type ScoresChangesFeedWriter struct {
@@ -66,7 +60,7 @@ func (writer *ScoresChangesFeedWriter) writeEvents() error {
 	return err
 }
 
-func (writer *ScoresChangesFeedWriter) addToQueue(event events.ScoreEvent, previousValue scoreValue) {
+func (writer *ScoresChangesFeedWriter) addToQueue(event events.ScoreEvent, previousValue events.ScoreValue) {
 	changedEvent := events.ScoreChangedEvent{
 		ScoreEvent: event,
 		Previous:   previousValue,
