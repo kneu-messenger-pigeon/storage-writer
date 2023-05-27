@@ -276,7 +276,7 @@ func TestWriteScore(t *testing.T) {
 			Id:           112233,
 			StudentId:    123,
 			LessonId:     150,
-			LessonPart:   1,
+			LessonPart:   2,
 			DisciplineId: 234,
 			Year:         2028,
 			Semester:     1,
@@ -292,7 +292,7 @@ func TestWriteScore(t *testing.T) {
 		redis, redisMock := redismock.NewClientMock()
 
 		studentDisciplineScoresKey := "2028:1:scores:123:234"
-		lessonKey := "150:1"
+		lessonKey := "150:2"
 
 		disciplineTotalsKey := "2028:1:totals:234"
 		studentDisciplinesKey := "2028:1:student_disciplines:123"
