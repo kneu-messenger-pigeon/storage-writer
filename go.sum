@@ -54,6 +54,8 @@ github.com/kneu-messenger-pigeon/events v0.1.32 h1:xkLP02odC+Oy5NIjrFCsxQo9J+WRD
 github.com/kneu-messenger-pigeon/events v0.1.32/go.mod h1:yPgqpO/+XVOZmTdH8BB4wbE+2/keLNhjorMVzJwHQL8=
 github.com/kneu-messenger-pigeon/events v0.1.33 h1:DduDWEQbC2UzOGaKuqzFZGhX7ed/Y0HSYv4ovJUL740=
 github.com/kneu-messenger-pigeon/events v0.1.33/go.mod h1:yPgqpO/+XVOZmTdH8BB4wbE+2/keLNhjorMVzJwHQL8=
+github.com/kneu-messenger-pigeon/events v0.1.35 h1:Nx8WF/AxtHBqXvZSRpx+CV+zC1zcjYM2HJzXD+AexKs=
+github.com/kneu-messenger-pigeon/events v0.1.35/go.mod h1:yPgqpO/+XVOZmTdH8BB4wbE+2/keLNhjorMVzJwHQL8=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/nxadm/tail v1.4.8 h1:nPr65rt6Y5JFSKQO7qToXr7pePgD6Gwiw05lkbyAQTE=
 github.com/nxadm/tail v1.4.8/go.mod h1:+ncqLTQzXmGhMZNUePPaPqPvBxHAIsmXswZKocGu+AU=

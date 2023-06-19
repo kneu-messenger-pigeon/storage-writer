@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-redis/redis/v9"
+	"github.com/kneu-messenger-pigeon/events"
 	"github.com/segmentio/kafka-go"
 	"io"
 	"os"
@@ -40,7 +41,7 @@ func runApp(out io.Writer) error {
 		out: out,
 		writer: &kafka.Writer{
 			Addr:     kafka.TCP(config.kafkaHost),
-			Topic:    "scores_changes_feed",
+			Topic:    events.ScoresChangesFeedTopic,
 			Balancer: &kafka.LeastBytes{},
 		},
 	}
@@ -55,7 +56,7 @@ func runApp(out io.Writer) error {
 			kafka.ReaderConfig{
 				Brokers:     []string{config.kafkaHost},
 				GroupID:     groupId,
-				Topic:       "raw_scores",
+				Topic:       events.RawScoresTopic,
 				MinBytes:    10,
 				MaxBytes:    10e3,
 				MaxWait:     time.Second,
@@ -78,7 +79,7 @@ func runApp(out io.Writer) error {
 			kafka.ReaderConfig{
 				Brokers:     []string{config.kafkaHost},
 				GroupID:     groupId,
-				Topic:       "raw_scores",
+				Topic:       events.RawScoresTopic,
 				MinBytes:    10,
 				MaxBytes:    10e3,
 				MaxWait:     time.Second,
@@ -99,7 +100,7 @@ func runApp(out io.Writer) error {
 			kafka.ReaderConfig{
 				Brokers:     []string{config.kafkaHost},
 				GroupID:     groupId,
-				Topic:       "raw_lessons",
+				Topic:       events.RawLessonsTopic,
 				MinBytes:    10,
 				MaxBytes:    10e3,
 				MaxWait:     time.Second,
@@ -120,7 +121,7 @@ func runApp(out io.Writer) error {
 			kafka.ReaderConfig{
 				Brokers:     []string{config.kafkaHost},
 				GroupID:     groupId,
-				Topic:       "disciplines",
+				Topic:       events.DisciplinesTopic,
 				MinBytes:    10,
 				MaxBytes:    10e3,
 				MaxWait:     time.Second,
@@ -145,7 +146,7 @@ func runApp(out io.Writer) error {
 			kafka.ReaderConfig{
 				Brokers:     []string{config.kafkaHost},
 				GroupID:     groupId,
-				Topic:       "meta_events",
+				Topic:       events.MetaEventsTopic,
 				MinBytes:    10,
 				MaxBytes:    10e3,
 				MaxWait:     time.Second,
