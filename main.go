@@ -42,7 +42,7 @@ func runApp(out io.Writer) error {
 		writer: &kafka.Writer{
 			Addr:     kafka.TCP(config.kafkaHost),
 			Topic:    events.ScoresChangesFeedTopic,
-			Balancer: &kafka.LeastBytes{},
+			Balancer: &kafka.Murmur2Balancer{},
 		},
 	}
 

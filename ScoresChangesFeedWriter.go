@@ -40,12 +40,11 @@ func (writer *ScoresChangesFeedWriter) execute(ctx context.Context) {
 
 func (writer *ScoresChangesFeedWriter) writeEvents() error {
 	var payload []byte
-	count := len(writer.eventQueue)
-	messages := make([]kafka.Message, count)
-	for i := 0; i < count; i++ {
-		payload, _ = json.Marshal(writer.eventQueue[i])
+	messages := make([]kafka.Message, len(writer.eventQueue))
+	for i, message := range writer.eventQueue {
+		payload, _ = json.Marshal(message)
 		messages[i] = kafka.Message{
-			Key:   []byte(events.ScoreChangedEventName),
+			Key:   message.GetMessageKey(),
 			Value: payload,
 		}
 	}
@@ -53,7 +52,7 @@ func (writer *ScoresChangesFeedWriter) writeEvents() error {
 	err := writer.writer.WriteMessages(context.Background(), messages...)
 	if err == nil {
 		writer.eventQueueMutex.Lock()
-		writer.eventQueue = writer.eventQueue[count:len(writer.eventQueue)]
+		writer.eventQueue = writer.eventQueue[len(messages):len(writer.eventQueue)]
 		writer.eventQueueMutex.Unlock()
 	}
 	return err

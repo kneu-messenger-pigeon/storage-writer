@@ -51,7 +51,7 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 
 			_ = json.Unmarshal(message.Value, &actualEvent)
 
-			return assert.Equal(t, events.ScoreChangedEventName, string(message.Key)) &&
+			return assert.Equal(t, events.ScoreChangedEventName, events.GetEventName(message.Key)) &&
 				assert.Equal(t, expectedEvent, actualEvent)
 		}
 
@@ -116,7 +116,7 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 
 			_ = json.Unmarshal(message.Value, &actualEvent)
 
-			return assert.Equal(t, events.ScoreChangedEventName, string(message.Key)) &&
+			return assert.Equal(t, events.ScoreChangedEventName, events.GetEventName(actualEvent.GetMessageKey())) &&
 				assert.Equal(t, expectedEvent, actualEvent)
 		}
 		writer.On("WriteMessages", matchContext, mock.MatchedBy(expectedEventMessage)).Return(expectedError)
