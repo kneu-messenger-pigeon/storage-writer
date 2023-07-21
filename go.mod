@@ -8,7 +8,7 @@ require (
 	github.com/go-redis/redis/v9 v9.0.0-rc.2
 	github.com/go-redis/redismock/v9 v9.0.0-rc.2
 	github.com/joho/godotenv v1.4.0
-	github.com/kneu-messenger-pigeon/events v0.1.37
+	github.com/kneu-messenger-pigeon/events v0.1.40
 	github.com/segmentio/kafka-go v0.4.38
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/text v0.4.0

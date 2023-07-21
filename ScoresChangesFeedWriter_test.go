@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/kneu-messenger-pigeon/events"
+	"github.com/kneu-messenger-pigeon/events/mocks"
 	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -55,7 +56,7 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 				assert.Equal(t, expectedEvent, actualEvent)
 		}
 
-		writer := events.NewMockWriterInterface(t)
+		writer := mocks.NewWriterInterface(t)
 		writer.On("WriteMessages", matchContext, mock.MatchedBy(expectedEventMessage)).Return(nil)
 
 		scoresChangesFeedWriter := ScoresChangesFeedWriter{
@@ -98,7 +99,7 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*10)
 		var savedQueue []events.ScoreChangedEvent
 
-		writer := events.NewMockWriterInterface(t)
+		writer := mocks.NewWriterInterface(t)
 		scoresChangesFeedWriter := ScoresChangesFeedWriter{
 			out:    out,
 			writer: writer,

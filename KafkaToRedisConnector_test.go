@@ -7,6 +7,7 @@ import (
 	"errors"
 	"github.com/go-redis/redismock/v9"
 	"github.com/kneu-messenger-pigeon/events"
+	"github.com/kneu-messenger-pigeon/events/mocks"
 	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -46,7 +47,7 @@ func TestKafkaToRedisConnector(t *testing.T) {
 		writer.On("getExpectedMessageKey").Return(events.DisciplineEventName)
 		writer.On("getExpectedEventType").Return(&events.DisciplineEvent{})
 
-		reader := events.NewMockReaderInterface(t)
+		reader := mocks.NewReaderInterface(t)
 
 		reader.On("FetchMessage", matchContext).Once().Return(message, nil)
 		reader.On("FetchMessage", matchContext).Once().Return(func(_ context.Context) kafka.Message {
@@ -99,7 +100,7 @@ func TestKafkaToRedisConnector(t *testing.T) {
 		writer.On("getExpectedMessageKey").Return(events.DisciplineEventName)
 		writer.On("getExpectedEventType").Return(&events.DisciplineEvent{})
 
-		reader := events.NewMockReaderInterface(t)
+		reader := mocks.NewReaderInterface(t)
 
 		reader.On("FetchMessage", matchContext).Once().Return(func(_ context.Context) kafka.Message {
 			cancel()
@@ -133,7 +134,7 @@ func TestKafkaToRedisConnector(t *testing.T) {
 		writer.On("getExpectedMessageKey").Return("")
 		writer.On("getExpectedEventType").Return(&events.DisciplineEvent{})
 
-		reader := events.NewMockReaderInterface(t)
+		reader := mocks.NewReaderInterface(t)
 
 		connector := KafkaToRedisConnector{
 			out:    out,

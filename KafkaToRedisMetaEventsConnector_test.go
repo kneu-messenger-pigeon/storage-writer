@@ -7,6 +7,7 @@ import (
 	"errors"
 	"github.com/go-redis/redismock/v9"
 	"github.com/kneu-messenger-pigeon/events"
+	"github.com/kneu-messenger-pigeon/events/mocks"
 	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -40,7 +41,7 @@ func TestKafkaToRedisMetaEventsConnector(t *testing.T) {
 		lessonTypesListWriter := NewMockWriterInterface(t)
 		lessonTypesListWriter.On("setRedis", redis).Once()
 
-		reader := events.NewMockReaderInterface(t)
+		reader := mocks.NewReaderInterface(t)
 		reader.On("FetchMessage", matchContext).Once().Return(func(_ context.Context) kafka.Message {
 			cancel()
 			return message
@@ -90,7 +91,7 @@ func TestKafkaToRedisMetaEventsConnector(t *testing.T) {
 		lessonTypesListWriter.On("setRedis", redis).Once()
 		lessonTypesListWriter.On("write", &event).Once().Return(nil)
 
-		reader := events.NewMockReaderInterface(t)
+		reader := mocks.NewReaderInterface(t)
 		reader.On("FetchMessage", matchContext).Once().Return(func(_ context.Context) kafka.Message {
 			cancel()
 			return message
@@ -135,7 +136,7 @@ func TestKafkaToRedisMetaEventsConnector(t *testing.T) {
 		writer.On("setRedis", redis).Times(2)
 		writer.On("write", &event).Once().Return(expectedError)
 
-		reader := events.NewMockReaderInterface(t)
+		reader := mocks.NewReaderInterface(t)
 		reader.On("FetchMessage", matchContext).Once().Return(func(_ context.Context) kafka.Message {
 			cancel()
 			return message
