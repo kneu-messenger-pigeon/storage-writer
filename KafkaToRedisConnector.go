@@ -63,6 +63,7 @@ func (connector *KafkaToRedisConnector) execute(ctx context.Context, wg *sync.Wa
 
 		if len(messagesToCommit) != 0 && (len(messagesToCommit) >= 5000 || fetchContext.Err() != nil) {
 			// revert context with time to usual
+			fetchContextCancel()
 			fetchContext = ctx
 			err = connector.saveRedisIfLastSaveOlderThan(lastWriteTimestamp)
 			if err == nil {
