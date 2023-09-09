@@ -27,7 +27,7 @@ func (writer *ScoresChangesFeedWriter) execute(ctx context.Context) {
 	var err error
 	for ctx.Err() == nil || len(writer.eventQueue) != 0 {
 		if len(writer.eventQueue) != 0 {
-			fmt.Fprintf(writer.out, "Write %d score changes into feed... \n", len(writer.eventQueue))
+			fmt.Fprintf(writer.out, "Write %d score changes into scores changed feed... \n", len(writer.eventQueue))
 			err = writer.writeEvents()
 			if err != nil {
 				fmt.Fprintf(writer.out, "Failed to push score changes events: %s\n", err)
