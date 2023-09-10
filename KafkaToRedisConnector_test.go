@@ -132,7 +132,7 @@ func TestKafkaToRedisConnector(t *testing.T) {
 		writer := NewMockWriterInterface(t)
 		writer.On("setRedis", redis).Once()
 		writer.On("getExpectedMessageKey").Return("")
-		writer.On("getExpectedEventType").Return(&events.DisciplineEvent{})
+		writer.On("getExpectedEventType").Return(&events.DisciplineEvent{}).Maybe()
 
 		reader := mocks.NewReaderInterface(t)
 

@@ -35,9 +35,8 @@ func (connector *KafkaToRedisConnector) execute(ctx context.Context, wg *sync.Wa
 
 	connector.writer.setRedis(connector.redis)
 	expectedMessageKey := connector.writer.getExpectedMessageKey()
-	event := connector.writer.getExpectedEventType()
 
-	if expectedMessageKey == "" || event == nil {
+	if expectedMessageKey == "" || connector.writer.getExpectedEventType() == nil {
 		wg.Done()
 		return
 	}
@@ -47,6 +46,7 @@ func (connector *KafkaToRedisConnector) execute(ctx context.Context, wg *sync.Wa
 	for ctx.Err() == nil {
 		message, err = connector.reader.FetchMessage(fetchContext)
 		if err == nil && expectedMessageKey == string(message.Key) {
+			event := connector.writer.getExpectedEventType()
 			err = json.Unmarshal(message.Value, &event)
 			if err == nil {
 				err = connector.writer.write(event)
