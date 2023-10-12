@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
@@ -36,7 +37,7 @@ func TestRunApp(t *testing.T) {
 		running = false
 
 		assert.NoError(t, err, "Expected for TooManyError, got %s", err)
-
+		runtime.Gosched()
 		time.Sleep(time.Millisecond * 500)
 		outputString := out.String()
 		fmt.Println(outputString)

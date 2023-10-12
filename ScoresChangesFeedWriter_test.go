@@ -29,6 +29,7 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 				DisciplineId: 234,
 				Year:         2028,
 				Semester:     1,
+				ScoreSource:  events.Realtime,
 				ScoreValue: events.ScoreValue{
 					Value:     2.5,
 					IsAbsent:  false,
