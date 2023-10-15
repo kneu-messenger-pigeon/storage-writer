@@ -14,6 +14,32 @@ import (
 	"time"
 )
 
+func TestScoresChangesFeedWriterAddToQueue(t *testing.T) {
+	t.Run("sourceRealtime", func(t *testing.T) {
+		scoreEvent := events.ScoreEvent{
+			ScoreSource: events.Realtime,
+		}
+
+		scoresChangesFeedWriter := ScoresChangesFeedWriter{}
+		scoresChangesFeedWriter.addToQueue(scoreEvent, events.ScoreValue{})
+
+		assert.Equal(t, 1, len(scoresChangesFeedWriter.eventQueue))
+		assert.Equal(t, uint64(1), realtimeChangeScoresCount.Get())
+	})
+
+	t.Run("sourceRealtime", func(t *testing.T) {
+		scoreEvent := events.ScoreEvent{
+			ScoreSource: events.Secondary,
+		}
+
+		scoresChangesFeedWriter := ScoresChangesFeedWriter{}
+		scoresChangesFeedWriter.addToQueue(scoreEvent, events.ScoreValue{})
+
+		assert.Equal(t, 1, len(scoresChangesFeedWriter.eventQueue))
+		assert.Equal(t, uint64(1), secondaryChangeScoresCount.Get())
+	})
+}
+
 func TestScoresChangesFeedWriter(t *testing.T) {
 	matchContext := mock.MatchedBy(func(ctx context.Context) bool { return true })
 

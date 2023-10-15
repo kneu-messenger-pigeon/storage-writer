@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/go-redis/redis/v9"
 	"github.com/kneu-messenger-pigeon/events"
+	victoriaMetricsInit "github.com/kneu-messenger-pigeon/victoria-metrics-init"
 	"github.com/segmentio/kafka-go"
 	"io"
 	"os"
@@ -25,6 +26,7 @@ func runApp(out io.Writer) error {
 	if err == nil {
 		opt, err = redis.ParseURL(config.redisDsn)
 	}
+	victoriaMetricsInit.InitMetrics("storage-writer")
 
 	if err != nil {
 		return err

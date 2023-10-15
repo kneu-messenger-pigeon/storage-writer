@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	victoriaMetricsInit "github.com/kneu-messenger-pigeon/victoria-metrics-init"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"runtime"
@@ -47,6 +48,8 @@ func TestRunApp(t *testing.T) {
 		assert.Contains(t, outputString, "*main.DisciplineWriter connector started")
 		assert.Contains(t, outputString, "*main.ScoreWriter connector started")
 		assert.Equal(t, 2, strings.Count(outputString, "*main.ScoreWriter connector started"))
+		
+		assert.Equal(t, "storage-writer", victoriaMetricsInit.LastInstance)
 	})
 
 	t.Run("Run with wrong env file", func(t *testing.T) {
