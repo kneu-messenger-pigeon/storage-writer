@@ -70,8 +70,8 @@ func (writer *ScoresChangesFeedWriter) addToQueue(event events.ScoreEvent, previ
 	writer.eventQueueMutex.Unlock()
 
 	if event.ScoreSource == events.Realtime {
-		realtimeChangeScoresCount.Inc()
+		realtimeScoresChangesCount.Inc()
 	} else if event.ScoreSource == events.Secondary {
-		secondaryChangeScoresCount.Inc()
+		secondaryScoresChangesCount.Inc()
 	}
 }

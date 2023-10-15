@@ -24,7 +24,7 @@ func TestScoresChangesFeedWriterAddToQueue(t *testing.T) {
 		scoresChangesFeedWriter.addToQueue(scoreEvent, events.ScoreValue{})
 
 		assert.Equal(t, 1, len(scoresChangesFeedWriter.eventQueue))
-		assert.Equal(t, uint64(1), realtimeChangeScoresCount.Get())
+		assert.Equal(t, uint64(1), realtimeScoresChangesCount.Get())
 	})
 
 	t.Run("sourceRealtime", func(t *testing.T) {
@@ -36,7 +36,7 @@ func TestScoresChangesFeedWriterAddToQueue(t *testing.T) {
 		scoresChangesFeedWriter.addToQueue(scoreEvent, events.ScoreValue{})
 
 		assert.Equal(t, 1, len(scoresChangesFeedWriter.eventQueue))
-		assert.Equal(t, uint64(1), secondaryChangeScoresCount.Get())
+		assert.Equal(t, uint64(1), secondaryScoresChangesCount.Get())
 	})
 }
 

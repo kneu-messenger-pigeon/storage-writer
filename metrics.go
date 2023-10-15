@@ -3,7 +3,7 @@ package main
 import "github.com/VictoriaMetrics/metrics"
 
 var (
-	realtimeChangeScoresCount = metrics.NewCounter(`realtime_change_scores_count`)
+	realtimeScoresChangesCount = metrics.NewCounter(`scores__changes_count{source="realtime"}`)
 
-	secondaryChangeScoresCount = metrics.NewCounter(`secondary_change_scores_count`)
+	secondaryScoresChangesCount = metrics.NewCounter(`scores__changes_count{source="secondary"}`)
 )
