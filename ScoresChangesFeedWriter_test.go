@@ -94,6 +94,8 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 		go scoresChangesFeedWriter.execute(ctx)
 		scoresChangesFeedWriter.addToQueue(expectedEvent.ScoreEvent, expectedEvent.Previous)
 		<-ctx.Done()
+		time.Sleep(time.Millisecond * 3)
+
 	})
 
 	t.Run("writeFeed - error write to Kafka", func(t *testing.T) {

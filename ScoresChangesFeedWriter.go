@@ -24,21 +24,27 @@ type ScoresChangesFeedWriter struct {
 }
 
 func (writer *ScoresChangesFeedWriter) execute(ctx context.Context) {
-	var err error
-	for ctx.Err() == nil || len(writer.eventQueue) != 0 {
-		if len(writer.eventQueue) != 0 {
-			fmt.Fprintf(writer.out, "Write %d score changes into scores changed feed... \n", len(writer.eventQueue))
-			err = writer.writeEvents()
-			if err != nil {
-				fmt.Fprintf(writer.out, "Failed to push score changes events: %s\n", err)
-			}
-		} else {
-			time.Sleep(time.Millisecond)
+	tick := time.Tick(time.Millisecond * 10)
+
+	continueLoop := true
+	for continueLoop {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			continueLoop = false
 		}
+
+		writer.writeEvents()
 	}
 }
 
-func (writer *ScoresChangesFeedWriter) writeEvents() error {
+func (writer *ScoresChangesFeedWriter) writeEvents() {
+	if len(writer.eventQueue) == 0 {
+		return
+	}
+
+	fmt.Fprintf(writer.out, "Write %d score changes into scores changed feed... \n", len(writer.eventQueue))
+
 	var payload []byte
 	queueLength := len(writer.eventQueue)
 	messages := make([]kafka.Message, queueLength)
@@ -56,7 +62,10 @@ func (writer *ScoresChangesFeedWriter) writeEvents() error {
 		writer.eventQueue = writer.eventQueue[queueLength:len(writer.eventQueue)]
 		writer.eventQueueMutex.Unlock()
 	}
-	return err
+
+	if err != nil {
+		fmt.Fprintf(writer.out, "Failed to push score changes events: %s\n", err)
+	}
 }
 
 func (writer *ScoresChangesFeedWriter) addToQueue(event events.ScoreEvent, previousValue events.ScoreValue) {
