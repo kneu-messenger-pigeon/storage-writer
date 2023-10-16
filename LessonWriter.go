@@ -10,7 +10,8 @@ import (
 )
 
 type LessonWriter struct {
-	redis redis.UniversalClient
+	redis       redis.UniversalClient
+	maxLessonId MaxLessonIdSetterInterface
 }
 
 func (writer *LessonWriter) setRedis(redis redis.UniversalClient) {
@@ -41,6 +42,7 @@ func (writer *LessonWriter) write(s any) error {
 
 		return writer.redis.HDel(context.Background(), disciplineKey, lessonKey).Err()
 	} else {
+		writer.maxLessonId.Set(event.Id)
 		return writer.redis.HSet(context.Background(), disciplineKey, lessonKey, value).Err()
 	}
 }

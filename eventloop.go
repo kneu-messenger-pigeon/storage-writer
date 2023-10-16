@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"os/signal"
+	"runtime"
 	"sync"
 	"syscall"
 )
@@ -33,5 +34,6 @@ func (eventLoop *EventLoop) execute() {
 		go connector.execute(ctx, wg)
 	}
 
+	runtime.Gosched()
 	wg.Wait()
 }

@@ -24,22 +24,34 @@ func TestRunApp(t *testing.T) {
 		var out bytes.Buffer
 
 		running := true
+		var appErr error
 		go func() {
-			maxEndTime := time.Now().Add(time.Second * 2)
-			for running && maxEndTime.After(time.Now()) &&
-				strings.Count(out.String(), "connector started") >= ConnectorPoolSize {
-				time.Sleep(time.Millisecond * 200)
-			}
-			time.Sleep(time.Millisecond * 300)
-			_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+			appErr = runApp(&out)
+			running = false
 		}()
 
-		err := runApp(&out)
-		running = false
-
-		assert.NoError(t, err, "Expected for TooManyError, got %s", err)
 		runtime.Gosched()
-		time.Sleep(time.Millisecond * 500)
+		time.Sleep(time.Second)
+
+		expectedStartedMessageCount := ConnectorPoolSize + 2
+		maxEndTime := time.Now().Add(time.Second * 20)
+
+		ticker := time.NewTicker(time.Second)
+		for running && maxEndTime.After(time.Now()) &&
+			strings.Count(out.String(), "connector started") >= expectedStartedMessageCount {
+			runtime.Gosched()
+			<-ticker.C
+		}
+		ticker.Stop()
+
+		time.Sleep(time.Second)
+		_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+		runtime.Gosched()
+		time.Sleep(time.Second)
+
+		assert.NoError(t, appErr)
+		runtime.Gosched()
+		time.Sleep(time.Second)
 		outputString := out.String()
 		fmt.Println(outputString)
 
@@ -48,7 +60,7 @@ func TestRunApp(t *testing.T) {
 		assert.Contains(t, outputString, "*main.DisciplineWriter connector started")
 		assert.Contains(t, outputString, "*main.ScoreWriter connector started")
 		assert.Equal(t, 2, strings.Count(outputString, "*main.ScoreWriter connector started"))
-		
+
 		assert.Equal(t, "storage-writer", victoriaMetricsInit.LastInstance)
 	})
 

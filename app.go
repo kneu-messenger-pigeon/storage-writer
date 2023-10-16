@@ -35,6 +35,8 @@ func runApp(out io.Writer) error {
 	redisClient := redis.NewClient(opt)
 	groupId := "storage-writer"
 
+	maxLessonIdStorage := newMaxLessonIdStorage(redisClient)
+
 	scoresChangesFeedWriter := &ScoresChangesFeedWriter{
 		out: out,
 		writer: &kafka.Writer{
@@ -42,6 +44,7 @@ func runApp(out io.Writer) error {
 			Topic:    events.ScoresChangesFeedTopic,
 			Balancer: &kafka.Murmur2Balancer{},
 		},
+		maxLessonId: maxLessonIdStorage,
 	}
 
 	scoreConnector1 := &KafkaToRedisConnector{
@@ -91,9 +94,11 @@ func runApp(out io.Writer) error {
 	}
 
 	lessonConnector := &KafkaToRedisConnector{
-		out:    out,
-		redis:  redisClient,
-		writer: &LessonWriter{},
+		out:   out,
+		redis: redisClient,
+		writer: &LessonWriter{
+			maxLessonId: maxLessonIdStorage,
+		},
 		reader: kafka.NewReader(
 			kafka.ReaderConfig{
 				Brokers:     []string{config.kafkaHost},
