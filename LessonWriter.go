@@ -42,7 +42,8 @@ func (writer *LessonWriter) write(s any) error {
 
 		return writer.redis.HDel(context.Background(), disciplineKey, lessonKey).Err()
 	} else {
+		err := writer.redis.HSet(context.Background(), disciplineKey, lessonKey, value).Err()
 		writer.maxLessonId.Set(event.Id)
-		return writer.redis.HSet(context.Background(), disciplineKey, lessonKey, value).Err()
+		return err
 	}
 }
