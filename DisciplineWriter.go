@@ -77,10 +77,23 @@ var replaceApostrophe = regexp.MustCompile("(\\p{L})[``’'ʼ](\\p{L})")
 
 var ukrainianToUpper = cases.Upper(language.Ukrainian)
 
+var replacers = [8]*strings.Replacer{
+	strings.NewReplacer("`", ""),
+	strings.NewReplacer("\\", ""),
+	strings.NewReplacer("1 С:", "1С:"),
+	strings.NewReplacer("іноз мова", "іноземна мова"),
+	strings.NewReplacer("_", " "),
+	strings.NewReplacer("+", " "),
+	strings.NewReplacer("~", " "),
+	strings.NewReplacer("*", " "),
+}
+
 func clearDisciplineName(name string) string {
 	name = replaceApostrophe.ReplaceAllString(name, "$1\\ʼ$2")
-	name = strings.ReplaceAll(name, "`", "")
-	name = strings.ReplaceAll(name, "\\", "")
+
+	for _, replacer := range replacers {
+		name = replacer.Replace(name)
+	}
 
 	for i := 0; i < len(regexps); i++ {
 		name = regexps[i].ReplaceAllString(name, "")
@@ -94,9 +107,6 @@ func clearDisciplineName(name string) string {
 	if len(name) != 0 {
 		name = ukrainianToUpper.String(name[:1]) + name[1:]
 	}
-
-	name = strings.Replace(name, "1 С:", "1С:", 1)
-	name = strings.Replace(name, "іноз мова", "іноземна мова", 1)
 
 	return name
 }

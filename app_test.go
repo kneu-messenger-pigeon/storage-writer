@@ -17,7 +17,7 @@ import (
 
 func TestRunApp(t *testing.T) {
 	t.Run("Run with mock config", func(t *testing.T) {
-		_ = os.Setenv("KAFKA_HOST", expectedConfig.kafkaHost)
+		_ = os.Setenv("KAFKA_HOST", "localhost:9090")
 		_ = os.Setenv("REDIS_DSN", expectedConfig.redisDsn)
 		_ = os.Setenv("KAFKA_TIMEOUT", strconv.Itoa(int(expectedConfig.kafkaTimeout.Seconds())))
 
@@ -31,16 +31,29 @@ func TestRunApp(t *testing.T) {
 		}()
 
 		runtime.Gosched()
-		time.Sleep(time.Second)
+		time.Sleep(time.Second * 5)
 
 		expectedStartedMessageCount := ConnectorPoolSize + 2
-		maxEndTime := time.Now().Add(time.Second * 20)
+		maxEndTime := time.Now().Add(time.Second * 30)
 
 		ticker := time.NewTicker(time.Second)
-		for running && maxEndTime.After(time.Now()) &&
-			strings.Count(out.String(), "connector started") >= expectedStartedMessageCount {
-			runtime.Gosched()
-			<-ticker.C
+
+		for _ = range ticker.C {
+			if !running {
+				break
+			}
+
+			if time.Now().After(maxEndTime) {
+				break
+			}
+			if strings.Count(out.String(), "connector started") >= expectedStartedMessageCount {
+				break
+			}
+
+			if strings.Contains(out.String(), "failed to open connection") {
+				fmt.Println("found error")
+				break
+			}
 		}
 		ticker.Stop()
 
