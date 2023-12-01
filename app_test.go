@@ -72,6 +72,7 @@ func TestRunApp(t *testing.T) {
 		assert.Contains(t, outputString, "*main.LessonWriter connector started")
 		assert.Contains(t, outputString, "*main.DisciplineWriter connector started")
 		assert.Contains(t, outputString, "*main.ScoreWriter connector started")
+		assert.Equal(t, 2, strings.Count(outputString, "*main.LessonWriter connector started"))
 		assert.Equal(t, 2, strings.Count(outputString, "*main.ScoreWriter connector started"))
 
 		assert.Equal(t, "storage-writer", victoriaMetricsInit.LastInstance)

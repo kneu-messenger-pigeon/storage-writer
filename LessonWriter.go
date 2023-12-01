@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"github.com/go-redis/redis/v9"
 	"github.com/kneu-messenger-pigeon/events"
-	"strconv"
 	"time"
 )
 
 type LessonWriter struct {
-	redis       redis.UniversalClient
-	maxLessonId MaxLessonIdSetterInterface
+	redis redis.UniversalClient
 }
 
 func (writer *LessonWriter) setRedis(redis redis.UniversalClient) {
@@ -29,8 +27,8 @@ func (writer *LessonWriter) getExpectedEventType() any {
 func (writer *LessonWriter) write(s any) error {
 	event := s.(*events.LessonEvent)
 
-	disciplineKey := fmt.Sprintf("%d:%d:lessons:%d", event.Year, event.Semester, event.DisciplineId)
-	lessonKey := strconv.Itoa(int(event.Id))
+	disciplineKey := getDisciplineKey(event.Year, event.Semester, event.DisciplineId)
+	lessonKey := getLessonKey(event.Id)
 
 	value := fmt.Sprintf("%s%d", event.Date.Format("060102"), event.TypeId)
 	if event.IsDeleted {
@@ -43,7 +41,6 @@ func (writer *LessonWriter) write(s any) error {
 		return writer.redis.HDel(context.Background(), disciplineKey, lessonKey).Err()
 	} else {
 		err := writer.redis.HSet(context.Background(), disciplineKey, lessonKey, value).Err()
-		writer.maxLessonId.Set(event.Id)
 		return err
 	}
 }

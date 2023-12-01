@@ -11,6 +11,10 @@ import (
 	"time"
 )
 
+const ScoresChangesFeedWriterCheckInterval = time.Second
+
+const ScoresChangesFeedWriterWaitingTimeout = time.Minute * 10
+
 type ScoresChangesFeedWriterInterface interface {
 	execute(ctx context.Context)
 	addToQueue(event events.ScoreEvent, previousValue events.ScoreValue)
@@ -21,7 +25,7 @@ type ScoresChangesFeedWriter struct {
 	writer              events.WriterInterface
 	readyQueue          eventQueueMutex
 	waitingQueue        eventQueueMutex
-	maxLessonId         MaxLessonIdGetterInterface
+	lessonExistChecker  LessonExistCheckerInterface
 	lastCheckedLessonId uint
 }
 
@@ -31,12 +35,11 @@ type eventQueueMutex struct {
 }
 
 func (writer *ScoresChangesFeedWriter) execute(ctx context.Context) {
-	ticker := time.NewTicker(time.Millisecond * 100)
+	ticker := time.NewTicker(ScoresChangesFeedWriterCheckInterval)
 
 	continueLoop := true
 	for continueLoop {
 		select {
-		case <-writer.maxLessonId.Changed():
 		case <-ticker.C:
 		case <-ctx.Done():
 			continueLoop = false
@@ -77,17 +80,16 @@ func (writer *ScoresChangesFeedWriter) writeEvents() {
 	}
 }
 
+func (writer *ScoresChangesFeedWriter) isEventReady(event *events.ScoreChangedEvent) bool {
+	return writer.lessonExistChecker.Exists(event.Year, event.Semester, event.DisciplineId, event.LessonId)
+}
+
 func (writer *ScoresChangesFeedWriter) checkWaiting(force bool) {
 	if len(writer.waitingQueue.queue) == 0 {
 		return
 	}
 
-	if writer.maxLessonId.Get() == writer.lastCheckedLessonId && !force {
-		return
-	}
-
-	writer.lastCheckedLessonId = writer.maxLessonId.Get()
-	syncAtDeadline := time.Now().Add(-10 * time.Minute)
+	syncAtDeadline := time.Now().Add(-ScoresChangesFeedWriterWaitingTimeout)
 
 	var event *events.ScoreChangedEvent
 	queueLength := len(writer.waitingQueue.queue)
@@ -96,7 +98,7 @@ func (writer *ScoresChangesFeedWriter) checkWaiting(force bool) {
 	for i := 0; i < queueLength; i++ {
 		event = writer.waitingQueue.queue[i]
 		if event != nil {
-			if event.LessonId <= writer.lastCheckedLessonId || event.SyncedAt.Before(syncAtDeadline) || force {
+			if writer.isEventReady(event) || event.SyncedAt.Before(syncAtDeadline) || force {
 				writer.readyQueue.queue = append(writer.readyQueue.queue, event)
 				writer.waitingQueue.queue[i] = nil
 			}
@@ -124,10 +126,10 @@ func (writer *ScoresChangesFeedWriter) addToQueue(event events.ScoreEvent, previ
 		Previous:   previousValue,
 	}
 
-	if changedEvent.LessonId > writer.maxLessonId.Get() {
-		writer.waitingQueue.append(&changedEvent)
-	} else {
+	if writer.isEventReady(&changedEvent) {
 		writer.readyQueue.append(&changedEvent)
+	} else {
+		writer.waitingQueue.append(&changedEvent)
 	}
 
 	if event.ScoreSource == events.Realtime {

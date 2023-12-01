@@ -35,8 +35,6 @@ func runApp(out io.Writer) error {
 	redisClient := redis.NewClient(opt)
 	groupId := "storage-writer"
 
-	maxLessonIdStorage := newMaxLessonIdStorage(redisClient)
-
 	scoresChangesFeedWriter := &ScoresChangesFeedWriter{
 		out: out,
 		writer: &kafka.Writer{
@@ -44,15 +42,16 @@ func runApp(out io.Writer) error {
 			Topic:    events.ScoresChangesFeedTopic,
 			Balancer: &kafka.Murmur2Balancer{},
 		},
-		maxLessonId: maxLessonIdStorage,
+	}
+
+	scoreWriter := &ScoreWriter{
+		scoresChangesFeedWriter: scoresChangesFeedWriter,
 	}
 
 	scoreConnector1 := &KafkaToRedisConnector{
-		out:   out,
-		redis: redisClient,
-		writer: &ScoreWriter{
-			scoresChangesFeedWriter: scoresChangesFeedWriter,
-		},
+		out:    out,
+		redis:  redisClient,
+		writer: scoreWriter,
 		reader: kafka.NewReader(
 			kafka.ReaderConfig{
 				Brokers:     []string{config.kafkaHost},
@@ -71,11 +70,9 @@ func runApp(out io.Writer) error {
 	}
 
 	scoreConnector2 := &KafkaToRedisConnector{
-		out:   out,
-		redis: redisClient,
-		writer: &ScoreWriter{
-			scoresChangesFeedWriter: scoresChangesFeedWriter,
-		},
+		out:    out,
+		redis:  redisClient,
+		writer: scoreWriter,
 		reader: kafka.NewReader(
 			kafka.ReaderConfig{
 				Brokers:     []string{config.kafkaHost},
@@ -93,12 +90,33 @@ func runApp(out io.Writer) error {
 		),
 	}
 
-	lessonConnector := &KafkaToRedisConnector{
-		out:   out,
-		redis: redisClient,
-		writer: &LessonWriter{
-			maxLessonId: maxLessonIdStorage,
-		},
+	lessonWriter := &LessonWriter{}
+
+	lessonConnector1 := &KafkaToRedisConnector{
+		out:    out,
+		redis:  redisClient,
+		writer: lessonWriter,
+		reader: kafka.NewReader(
+			kafka.ReaderConfig{
+				Brokers:     []string{config.kafkaHost},
+				GroupID:     groupId,
+				Topic:       events.RawLessonsTopic,
+				MinBytes:    10,
+				MaxBytes:    10e3,
+				MaxWait:     time.Second,
+				MaxAttempts: config.kafkaAttempts,
+				Dialer: &kafka.Dialer{
+					Timeout:   config.kafkaTimeout,
+					DualStack: kafka.DefaultDialer.DualStack,
+				},
+			},
+		),
+	}
+
+	lessonConnector2 := &KafkaToRedisConnector{
+		out:    out,
+		redis:  redisClient,
+		writer: lessonWriter,
 		reader: kafka.NewReader(
 			kafka.ReaderConfig{
 				Brokers:     []string{config.kafkaHost},
@@ -166,7 +184,8 @@ func runApp(out io.Writer) error {
 		connectorsPool: [ConnectorPoolSize]ConnectorInterface{
 			scoreConnector1,
 			scoreConnector2,
-			lessonConnector,
+			lessonConnector1,
+			lessonConnector2,
 			disciplineConnector,
 			metaEventsConnector,
 		},
@@ -179,7 +198,7 @@ func runApp(out io.Writer) error {
 
 		_ = scoreConnector1.reader.Close()
 		_ = scoreConnector2.reader.Close()
-		_ = lessonConnector.reader.Close()
+		_ = lessonConnector1.reader.Close()
 		_ = disciplineConnector.reader.Close()
 	}()
 	eventLoop.execute()

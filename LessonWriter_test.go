@@ -23,11 +23,7 @@ func TestWriteLesson(t *testing.T) {
 		redis, redisMock := redismock.NewClientMock()
 		redisMock.ExpectHSet("2026:2:lessons:200", "600", "2705135").SetVal(1)
 
-		lessonMaxId := newMaxLessonIdStorage(redis)
-
-		lessonWriter := LessonWriter{
-			maxLessonId: lessonMaxId,
-		}
+		lessonWriter := LessonWriter{}
 
 		lessonWriter.setRedis(redis)
 		err := lessonWriter.write(&event)
@@ -37,8 +33,6 @@ func TestWriteLesson(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NoError(t, redisMock.ExpectationsWereMet())
-
-		assert.Equal(t, uint(600), lessonMaxId.Get())
 	})
 
 	t.Run("delete lesson", func(t *testing.T) {
@@ -58,11 +52,7 @@ func TestWriteLesson(t *testing.T) {
 		redisMock.ExpectSetEx("2029:2:deleted-lessons:250:650", "3004265", time.Hour*24).SetVal("OK")
 		redisMock.ExpectHDel("2029:2:lessons:250", "650").SetVal(1)
 
-		lessonMaxId := newMaxLessonIdStorage(redis)
-
-		lessonWriter := LessonWriter{
-			maxLessonId: lessonMaxId,
-		}
+		lessonWriter := LessonWriter{}
 
 		lessonWriter.setRedis(redis)
 		err := lessonWriter.write(&event)
@@ -72,7 +62,5 @@ func TestWriteLesson(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NoError(t, redisMock.ExpectationsWereMet())
-
-		assert.Equal(t, uint(0), lessonMaxId.Get())
 	})
 }

@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/go-redis/redismock/v9"
 	"github.com/kneu-messenger-pigeon/events"
 	"github.com/kneu-messenger-pigeon/events/mocks"
 	"github.com/segmentio/kafka-go"
@@ -22,8 +21,15 @@ func TestScoresChangesFeedWriterAddToQueue(t *testing.T) {
 			ScoreSource: events.Realtime,
 		}
 
+		lessonExistChecker := NewMockLessonExistCheckerInterface(t)
+		lessonExistChecker.On(
+			"Exists",
+			scoreEvent.Year, scoreEvent.Semester,
+			scoreEvent.DisciplineId, scoreEvent.LessonId,
+		).Return(true)
+
 		scoresChangesFeedWriter := ScoresChangesFeedWriter{
-			maxLessonId: &MaxLessonId{},
+			lessonExistChecker: lessonExistChecker,
 		}
 		scoresChangesFeedWriter.addToQueue(scoreEvent, events.ScoreValue{})
 
@@ -36,8 +42,15 @@ func TestScoresChangesFeedWriterAddToQueue(t *testing.T) {
 			ScoreSource: events.Secondary,
 		}
 
+		lessonExistChecker := NewMockLessonExistCheckerInterface(t)
+		lessonExistChecker.On(
+			"Exists",
+			scoreEvent.Year, scoreEvent.Semester,
+			scoreEvent.DisciplineId, scoreEvent.LessonId,
+		).Return(true)
+
 		scoresChangesFeedWriter := ScoresChangesFeedWriter{
-			maxLessonId: &MaxLessonId{},
+			lessonExistChecker: lessonExistChecker,
 		}
 		scoresChangesFeedWriter.addToQueue(scoreEvent, events.ScoreValue{})
 
@@ -93,19 +106,17 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 		writer := mocks.NewWriterInterface(t)
 		writer.On("WriteMessages", matchContext, mock.MatchedBy(expectedEventMessage)).Return(nil)
 
-		redis, _ := redismock.NewClientMock()
-		maxLessonId := newMaxLessonIdStorage(redis)
-
-		if withWaiting {
-			maxLessonId.Set(100)
-		} else {
-			maxLessonId.Set(400)
-		}
+		lessonExistChecker := NewMockLessonExistCheckerInterface(t)
+		lessonExistChecker.On(
+			"Exists",
+			expectedEvent.Year, expectedEvent.Semester,
+			expectedEvent.DisciplineId, expectedEvent.LessonId,
+		).Return(true)
 
 		scoresChangesFeedWriter := ScoresChangesFeedWriter{
-			out:         out,
-			writer:      writer,
-			maxLessonId: maxLessonId,
+			out:                out,
+			writer:             writer,
+			lessonExistChecker: lessonExistChecker,
 		}
 
 		go scoresChangesFeedWriter.execute(ctx)
@@ -116,17 +127,26 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 
 		// should not be written to Kafka
 		notExistsLessonScoreEvent := events.ScoreEvent{
-			LessonId: 112233,
-			SyncedAt: time.Unix(time.Now().Unix(), 0),
+			LessonId:  112233,
+			UpdatedAt: time.Date(2024, time.Month(3), 5, 14, 30, 40, 0, time.Local),
+			SyncedAt:  time.Date(2024, time.Month(3), 5, 14, 35, 13, 0, time.Local),
 		}
 
+		notExistsLessonExists := false
 		if withWaiting {
+			lessonExistChecker.On(
+				"Exists",
+				notExistsLessonScoreEvent.Year, notExistsLessonScoreEvent.Semester,
+				notExistsLessonScoreEvent.DisciplineId, notExistsLessonScoreEvent.LessonId,
+			).Return(func(year int, semester uint8, disciplineId uint, lessonId uint) bool {
+				return notExistsLessonExists
+			})
+
 			scoresChangesFeedWriter.addToQueue(notExistsLessonScoreEvent, events.ScoreValue{})
-			maxLessonId.Set(300)
 		}
 
 		runtime.Gosched()
-		time.Sleep(time.Millisecond * 100)
+		time.Sleep(ScoresChangesFeedWriterCheckInterval)
 		if withWaiting {
 			assert.Equal(t, 1, len(scoresChangesFeedWriter.waitingQueue.queue))
 		} else {
@@ -151,6 +171,7 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 		runtime.Gosched()
 
 		if withWaiting {
+			notExistsLessonExists = true
 			var secondReceivedEvent events.ScoreChangedEvent
 			select {
 			case <-receiveTimeout.Done():
@@ -161,7 +182,7 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 		}
 
 		runtime.Gosched()
-		time.Sleep(time.Millisecond * 100)
+		time.Sleep(ScoresChangesFeedWriterCheckInterval)
 	}
 
 	t.Run("writeFeed-without-waiting", func(t *testing.T) {
@@ -202,13 +223,18 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*10)
 		var savedQueue []*events.ScoreChangedEvent
 
+		lessonExistChecker := NewMockLessonExistCheckerInterface(t)
+		lessonExistChecker.On(
+			"Exists",
+			expectedEvent.Year, expectedEvent.Semester,
+			expectedEvent.DisciplineId, expectedEvent.LessonId,
+		).Return(true)
+
 		writer := mocks.NewWriterInterface(t)
 		scoresChangesFeedWriter := ScoresChangesFeedWriter{
-			out:    out,
-			writer: writer,
-			maxLessonId: &MaxLessonId{
-				maxLessonId: 300,
-			},
+			out:                out,
+			writer:             writer,
+			lessonExistChecker: lessonExistChecker,
 		}
 
 		expectedEventMessage := func(message kafka.Message) bool {
