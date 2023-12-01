@@ -23,6 +23,9 @@ func TestLessonExistChecker_Exists(t *testing.T) {
 		getDisciplineKey(2030, 1, 980),
 		getLessonKey(6500),
 	).SetVal(false)
+	redisMock.ExpectExists(
+		getDeletedLessonKey(2030, 1, 980, 6500),
+	).SetVal(0)
 
 	checker := newLessonExistChecker(redis)
 

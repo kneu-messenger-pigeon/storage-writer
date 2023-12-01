@@ -22,5 +22,8 @@ func (checker *LessonExistChecker) Exists(year int, semester uint8, disciplineId
 		context.Background(),
 		getDisciplineKey(year, semester, disciplineId),
 		getLessonKey(lessonId),
-	).Val()
+	).Val() || checker.redis.Exists(
+		context.Background(),
+		getDeletedLessonKey(year, semester, disciplineId, lessonId),
+	).Val() == 1
 }

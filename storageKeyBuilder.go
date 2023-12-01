@@ -9,3 +9,7 @@ func getDisciplineKey(year int, semester uint8, disciplineId uint) string {
 func getLessonKey(lessonId uint) string {
 	return fmt.Sprintf("%d", lessonId)
 }
+
+func getDeletedLessonKey(year int, semester uint8, disciplineId uint, lessonId uint) string {
+	return fmt.Sprintf("%d:%d:deleted-lessons:%d:%d", year, semester, disciplineId, lessonId)
+}
