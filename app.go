@@ -42,6 +42,7 @@ func runApp(out io.Writer) error {
 			Topic:    events.ScoresChangesFeedTopic,
 			Balancer: &kafka.Murmur2Balancer{},
 		},
+		lessonExistChecker: newLessonExistChecker(redisClient),
 	}
 
 	scoreWriter := &ScoreWriter{
