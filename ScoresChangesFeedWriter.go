@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const DefaultScoresChangesFeedWriterCheckInterval = time.Second * 5
+const DefaultScoresChangesFeedWriterCheckInterval = time.Second * 2
 
 const DefaultScoresChangesFeedWriterWaitingTimeout = time.Hour
 
