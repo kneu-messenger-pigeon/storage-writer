@@ -113,11 +113,8 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 			expectedEvent.DisciplineId, expectedEvent.LessonId,
 		).Return(true)
 
-		scoresChangesFeedWriter := ScoresChangesFeedWriter{
-			out:                out,
-			writer:             writer,
-			lessonExistChecker: lessonExistChecker,
-		}
+		scoresChangesFeedWriter := NewScoresChangesFeedWriter(out, writer, lessonExistChecker)
+		scoresChangesFeedWriter.checkInterval = time.Millisecond * 300
 
 		go scoresChangesFeedWriter.execute(ctx)
 		runtime.Gosched()
@@ -146,7 +143,7 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 		}
 
 		runtime.Gosched()
-		time.Sleep(ScoresChangesFeedWriterCheckInterval)
+		time.Sleep(scoresChangesFeedWriter.checkInterval)
 		if withWaiting {
 			assert.Equal(t, 1, len(scoresChangesFeedWriter.waitingQueue.queue))
 		} else {
@@ -182,7 +179,7 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 		}
 
 		runtime.Gosched()
-		time.Sleep(ScoresChangesFeedWriterCheckInterval)
+		time.Sleep(scoresChangesFeedWriter.checkInterval)
 	}
 
 	t.Run("writeFeed-without-waiting", func(t *testing.T) {
@@ -231,11 +228,8 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 		).Return(true)
 
 		writer := mocks.NewWriterInterface(t)
-		scoresChangesFeedWriter := ScoresChangesFeedWriter{
-			out:                out,
-			writer:             writer,
-			lessonExistChecker: lessonExistChecker,
-		}
+		scoresChangesFeedWriter := NewScoresChangesFeedWriter(out, writer, lessonExistChecker)
+		scoresChangesFeedWriter.checkInterval = time.Millisecond * 300
 
 		expectedEventMessage := func(message kafka.Message) bool {
 			if ctx.Err() != nil {

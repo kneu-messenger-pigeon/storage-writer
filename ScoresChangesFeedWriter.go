@@ -11,9 +11,9 @@ import (
 	"time"
 )
 
-const ScoresChangesFeedWriterCheckInterval = time.Second
+const DefaultScoresChangesFeedWriterCheckInterval = time.Second * 5
 
-const ScoresChangesFeedWriterWaitingTimeout = time.Minute * 10
+const DefaultScoresChangesFeedWriterWaitingTimeout = time.Hour
 
 type ScoresChangesFeedWriterInterface interface {
 	execute(ctx context.Context)
@@ -23,6 +23,7 @@ type ScoresChangesFeedWriterInterface interface {
 type ScoresChangesFeedWriter struct {
 	out                 io.Writer
 	writer              events.WriterInterface
+	checkInterval       time.Duration
 	readyQueue          eventQueueMutex
 	waitingQueue        eventQueueMutex
 	lessonExistChecker  LessonExistCheckerInterface
@@ -34,8 +35,20 @@ type eventQueueMutex struct {
 	mutex sync.Mutex
 }
 
+func NewScoresChangesFeedWriter(out io.Writer, writer events.WriterInterface, lessonExistChecker LessonExistCheckerInterface) *ScoresChangesFeedWriter {
+	return &ScoresChangesFeedWriter{
+		out:                 out,
+		writer:              writer,
+		checkInterval:       DefaultScoresChangesFeedWriterCheckInterval,
+		readyQueue:          eventQueueMutex{queue: make([]*events.ScoreChangedEvent, 0)},
+		waitingQueue:        eventQueueMutex{queue: make([]*events.ScoreChangedEvent, 0)},
+		lessonExistChecker:  lessonExistChecker,
+		lastCheckedLessonId: 0,
+	}
+}
+
 func (writer *ScoresChangesFeedWriter) execute(ctx context.Context) {
-	ticker := time.NewTicker(ScoresChangesFeedWriterCheckInterval)
+	ticker := time.NewTicker(writer.checkInterval)
 
 	continueLoop := true
 	for continueLoop {
@@ -89,7 +102,7 @@ func (writer *ScoresChangesFeedWriter) checkWaiting(force bool) {
 		return
 	}
 
-	syncAtDeadline := time.Now().Add(-ScoresChangesFeedWriterWaitingTimeout)
+	syncAtDeadline := time.Now().Add(-DefaultScoresChangesFeedWriterWaitingTimeout)
 
 	var event *events.ScoreChangedEvent
 	queueLength := len(writer.waitingQueue.queue)

@@ -35,15 +35,15 @@ func runApp(out io.Writer) error {
 	redisClient := redis.NewClient(opt)
 	groupId := "storage-writer"
 
-	scoresChangesFeedWriter := &ScoresChangesFeedWriter{
-		out: out,
-		writer: &kafka.Writer{
+	scoresChangesFeedWriter := NewScoresChangesFeedWriter(
+		out,
+		&kafka.Writer{
 			Addr:     kafka.TCP(config.kafkaHost),
 			Topic:    events.ScoresChangesFeedTopic,
 			Balancer: &kafka.Murmur2Balancer{},
 		},
-		lessonExistChecker: newLessonExistChecker(redisClient),
-	}
+		newLessonExistChecker(redisClient),
+	)
 
 	scoreWriter := &ScoreWriter{
 		scoresChangesFeedWriter: scoresChangesFeedWriter,
