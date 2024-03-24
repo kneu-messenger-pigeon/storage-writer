@@ -126,7 +126,7 @@ func TestScoresChangesFeedWriter(t *testing.T) {
 		notExistsLessonScoreEvent := events.ScoreEvent{
 			LessonId:  112233,
 			UpdatedAt: time.Date(2024, time.Month(3), 5, 14, 30, 40, 0, time.Local),
-			SyncedAt:  time.Date(2024, time.Month(3), 5, 14, 35, 13, 0, time.Local),
+			SyncedAt:  time.Now().UTC(),
 		}
 
 		notExistsLessonExists := false

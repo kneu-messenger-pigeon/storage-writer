@@ -6,7 +6,6 @@ import (
 	"github.com/go-redis/redis/v9"
 	"github.com/kneu-messenger-pigeon/events"
 	"io"
-	"time"
 )
 
 // YearChangeWriter
@@ -51,7 +50,7 @@ func (writer *YearChangeWriter) write(s any) (err error) {
 		previousYear = 0
 	}
 
-	if previousYear != 0 && previousYear != currentYear {
+	if previousYear != 0 && previousYear < currentYear {
 		iter := writer.redis.Scan(ctx, 0, fmt.Sprintf("%d:*", previousYear), 0).Iterator()
 
 		for err == nil && iter.Next(ctx) {
@@ -62,7 +61,7 @@ func (writer *YearChangeWriter) write(s any) (err error) {
 		}
 	}
 
-	if previousYear != currentYear && err == nil {
+	if previousYear < currentYear && err == nil {
 		err = writer.redis.Set(ctx, "currentYear", currentYear, 0).Err()
 		if err == nil {
 			err = writer.redis.Save(ctx).Err()
@@ -73,6 +72,5 @@ func (writer *YearChangeWriter) write(s any) (err error) {
 }
 
 func isValidEducationYear(educationYear int) bool {
-	yearNow := time.Now().Year()
-	return educationYear >= 2022 && (educationYear == yearNow-1 || educationYear == yearNow)
+	return educationYear >= 2022 && educationYear < 2050
 }
