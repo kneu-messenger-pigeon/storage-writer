@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/go-redis/redis/v9"
 	"github.com/kneu-messenger-pigeon/events"
@@ -75,7 +76,7 @@ func (connector *KafkaToRedisConnector) execute(ctx context.Context, wg *sync.Wa
 			}
 		}
 
-		if err != nil && err != context.Canceled {
+		if err != nil && !errors.Is(err, context.Canceled) {
 			fmt.Fprintf(connector.out, "%T error: %v \n", connector.writer, err)
 		}
 	}
