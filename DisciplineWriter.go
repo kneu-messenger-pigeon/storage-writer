@@ -42,12 +42,18 @@ func (writer *DisciplineWriter) write(e interface{}) error {
 	return nil
 }
 
-var regexps = [4]*regexp.Regexp{
+var regexps = [5]*regexp.Regexp{
 	/**
 	 * Remove starting with: "Тренінг-курс(Створення власного ІТ-бізнесу)", "Тренінг-курс `Управління командами`"
 	 * https://regex101.com/r/j8BjSd/1
 	 */
 	regexp.MustCompile(`(?i)^\s*Тренінг-курс\s*\(?`),
+
+	/**
+	 * Remove Faculty shortnames: Маркетинг в агробізнесі, 5 сем., Фт маркет.
+	 * https://regex101.com/r/9RHG5U/1
+	 */
+	regexp.MustCompile(`,\s*Фт\.?\s+\p{L}{3,10}($|,)`),
 
 	/**
 	 * remove ending with: ", Юр. Інст."; ", Фін.", ", Марк.", ", Інф. Інст."
@@ -73,7 +79,7 @@ var removeDuplicateSpaces = regexp.MustCompile(`\s+`)
  * Normalize apostrophe: "Компʼютерна математика"
  * https://regex101.com/r/xtA6HI/1
  */
-var replaceApostrophe = regexp.MustCompile("(\\p{L})[``’'ʼ](\\p{L})")
+var replaceApostrophe = regexp.MustCompile("(\\p{L})[`’'ʼ](\\p{L})")
 
 var ukrainianToUpper = cases.Upper(language.Ukrainian)
 

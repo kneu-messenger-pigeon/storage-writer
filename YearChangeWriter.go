@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/go-redis/redis/v9"
 	"github.com/kneu-messenger-pigeon/events"
@@ -45,7 +46,7 @@ func (writer *YearChangeWriter) write(s any) (err error) {
 
 	ctx := context.Background()
 	previousYear, err := writer.redis.Get(ctx, "currentYear").Int()
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		err = nil
 		previousYear = 0
 	}
