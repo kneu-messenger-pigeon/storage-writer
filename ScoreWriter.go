@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"github.com/go-redis/redis/v9"
 	"github.com/kneu-messenger-pigeon/events"
+	"github.com/redis/go-redis/v9"
 	"strconv"
 )
 
@@ -45,8 +46,8 @@ func (writer *ScoreWriter) write(s any) (err error) {
 	ctx := context.Background()
 	writeValueFunc := func(tx *redis.Tx) (err error) {
 		storedValue, err := writer.redis.HGet(ctx, studentDisciplineScoresKey, lessonKey).Float64()
-		storedIsDeleted := err == redis.Nil
-		if err != nil && err != redis.Nil {
+		storedIsDeleted := errors.Is(err, redis.Nil)
+		if err != nil && !storedIsDeleted {
 			return err
 		}
 		newValue := makeScoreStorageValue(event)

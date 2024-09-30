@@ -1,6 +1,6 @@
 package main
 
-import "github.com/go-redis/redis/v9"
+import "github.com/redis/go-redis/v9"
 
 type WriterInterface interface {
 	setRedis(redis redis.UniversalClient)

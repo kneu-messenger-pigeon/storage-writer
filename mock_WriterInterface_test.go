@@ -3,7 +3,7 @@
 package main
 
 import (
-	redis "github.com/go-redis/redis/v9"
+	redis "github.com/redis/go-redis/v9"
 	mock "github.com/stretchr/testify/mock"
 )
 

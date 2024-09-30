@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/go-redis/redis/v9"
 	"github.com/kneu-messenger-pigeon/events"
 	victoriaMetricsInit "github.com/kneu-messenger-pigeon/victoria-metrics-init"
+	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
 	"io"
 	"os"
