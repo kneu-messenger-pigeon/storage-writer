@@ -42,7 +42,7 @@ func (writer *DisciplineWriter) write(e interface{}) error {
 	return nil
 }
 
-var regexps = [5]*regexp.Regexp{
+var regexps = [6]*regexp.Regexp{
 	/**
 	 * Remove starting with: "Тренінг-курс(Створення власного ІТ-бізнесу)", "Тренінг-курс `Управління командами`"
 	 * https://regex101.com/r/j8BjSd/1
@@ -53,7 +53,13 @@ var regexps = [5]*regexp.Regexp{
 	 * Remove Faculty shortnames: Маркетинг в агробізнесі, 5 сем., Фт маркет.
 	 * https://regex101.com/r/9RHG5U/1
 	 */
-	regexp.MustCompile(`,\s*Фт\.?\s+\p{L}{3,10}($|,)`),
+	regexp.MustCompile(`,\s*Фт\.?\s+\p{L}{3,10}\s*($|,)`),
+
+	/**
+	 * Remove Faculty abbreviation: Контролінг, 6 сем., ФЕУ; Бюджетування на підприємстві, 6 сем., ФЕУ
+	 * https://regex101.com/r/eLjT6G/1
+	 */
+	regexp.MustCompile(`,\s*[А-ЯIЇ]{2,4}\s*($|,)`),
 
 	/**
 	 * remove ending with: ", Юр. Інст."; ", Фін.", ", Марк.", ", Інф. Інст."
