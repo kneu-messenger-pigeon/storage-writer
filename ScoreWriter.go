@@ -91,7 +91,7 @@ func (writer *ScoreWriter) write(s any) (err error) {
 	// Retry if the key has been changed.
 	for i := 0; i < maxWriteRetries; i++ {
 		err = writer.redis.Watch(ctx, writeValueFunc, studentDisciplineScoresKey)
-		if err == nil || err != redis.TxFailedErr {
+		if err == nil || !errors.Is(err, redis.TxFailedErr) {
 			break
 		}
 	}
