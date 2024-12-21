@@ -44,12 +44,17 @@ func TestWriteScore(t *testing.T) {
 		disciplineTotalsKey := "2028:1:totals:234"
 		studentDisciplinesKey := "2028:1:student_disciplines:123"
 
+		disciplineSemesterUpdatedAtKey := "2028:discipline_semester_updated_at:234"
+		disciplineSemesterUpdatedAtKeyExpectedValue := "1" + strconv.Itoa(int(event.UpdatedAt.Unix()))
+
 		redisMock.MatchExpectationsInOrder(true)
 
 		redisMock.ExpectWatch(studentDisciplineScoresKey)
 
 		redisMock.ExpectHGet(studentDisciplineScoresKey, lessonKey).RedisNil()
 		redisMock.ExpectTxPipeline()
+
+		redisMock.ExpectSet(disciplineSemesterUpdatedAtKey, disciplineSemesterUpdatedAtKeyExpectedValue, 0).SetVal("OK")
 		redisMock.ExpectHSet(studentDisciplineScoresKey, lessonKey, 2.5).SetVal(1)
 
 		redisMock.ExpectZIncrBy(disciplineTotalsKey, 2.5, "123").SetVal(1)
@@ -102,12 +107,16 @@ func TestWriteScore(t *testing.T) {
 
 		studentDisciplinesKey := "2028:1:student_disciplines:123"
 
+		disciplineSemesterUpdatedAtKey := "2028:discipline_semester_updated_at:234"
+		disciplineSemesterUpdatedAtKeyExpectedValue := "1" + strconv.Itoa(int(event.UpdatedAt.Unix()))
+
 		redisMock.MatchExpectationsInOrder(true)
 
 		redisMock.ExpectWatch(studentDisciplineScoresKey)
 
 		redisMock.ExpectHGet(studentDisciplineScoresKey, lessonKey).RedisNil()
 		redisMock.ExpectTxPipeline()
+		redisMock.ExpectSet(disciplineSemesterUpdatedAtKey, disciplineSemesterUpdatedAtKeyExpectedValue, 0).SetVal("OK")
 		redisMock.ExpectHSet(studentDisciplineScoresKey, lessonKey, IsAbsentScoreValue).SetVal(1)
 
 		redisMock.ExpectTxPipelineExec()
@@ -297,12 +306,16 @@ func TestWriteScore(t *testing.T) {
 		disciplineTotalsKey := "2028:1:totals:234"
 		studentDisciplinesKey := "2028:1:student_disciplines:123"
 
+		disciplineSemesterUpdatedAtKey := "2028:discipline_semester_updated_at:234"
+		disciplineSemesterUpdatedAtKeyExpectedValue := "1" + strconv.Itoa(int(event.UpdatedAt.Unix()))
+
 		redisMock.MatchExpectationsInOrder(true)
 
 		redisMock.ExpectWatch(studentDisciplineScoresKey)
 
 		redisMock.ExpectHGet(studentDisciplineScoresKey, lessonKey).SetVal("3.5")
 		redisMock.ExpectTxPipeline()
+		redisMock.ExpectSet(disciplineSemesterUpdatedAtKey, disciplineSemesterUpdatedAtKeyExpectedValue, 0).SetVal("OK")
 		redisMock.ExpectHDel(studentDisciplineScoresKey, lessonKey).SetVal(1)
 
 		redisMock.ExpectZIncrBy(disciplineTotalsKey, -3.5, "123").SetVal(1)
@@ -355,12 +368,16 @@ func TestWriteScore(t *testing.T) {
 		disciplineTotalsKey := "2028:1:totals:234"
 		studentDisciplinesKey := "2028:1:student_disciplines:123"
 
+		disciplineSemesterUpdatedAtKey := "2028:discipline_semester_updated_at:234"
+		disciplineSemesterUpdatedAtKeyExpectedValue := "1" + strconv.Itoa(int(event.UpdatedAt.Unix()))
+
 		redisMock.MatchExpectationsInOrder(true)
 
 		redisMock.ExpectWatch(studentDisciplineScoresKey)
 
 		redisMock.ExpectHGet(studentDisciplineScoresKey, lessonKey).SetVal("7")
 		redisMock.ExpectTxPipeline()
+		redisMock.ExpectSet(disciplineSemesterUpdatedAtKey, disciplineSemesterUpdatedAtKeyExpectedValue, 0).SetVal("OK")
 		redisMock.ExpectHSet(studentDisciplineScoresKey, lessonKey, 2.5).SetVal(1)
 
 		redisMock.ExpectZIncrBy(disciplineTotalsKey, -4.5, "123").SetVal(1)
@@ -460,12 +477,16 @@ func TestWriteScore(t *testing.T) {
 
 		disciplineTotalsKey := "2028:1:totals:234"
 
+		disciplineSemesterUpdatedAtKey := "2028:discipline_semester_updated_at:234"
+		disciplineSemesterUpdatedAtKeyExpectedValue := "1" + strconv.Itoa(int(event.UpdatedAt.Unix()))
+
 		redisMock.MatchExpectationsInOrder(true)
 
 		redisMock.ExpectWatch(studentDisciplineScoresKey)
 
 		redisMock.ExpectHGet(studentDisciplineScoresKey, lessonKey).RedisNil()
 		redisMock.ExpectTxPipeline()
+		redisMock.ExpectSet(disciplineSemesterUpdatedAtKey, disciplineSemesterUpdatedAtKeyExpectedValue, 0).SetVal("OK")
 		redisMock.ExpectHSet(studentDisciplineScoresKey, lessonKey, 2.5).SetVal(1)
 
 		redisMock.ExpectZIncrBy(disciplineTotalsKey, 2.5, "123").SetVal(1)

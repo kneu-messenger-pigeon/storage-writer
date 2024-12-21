@@ -38,6 +38,9 @@ func (writer *ScoreWriter) write(s any) (err error) {
 
 	disciplineTotalsKey := fmt.Sprintf("%d:%d:totals:%d", event.Year, event.Semester, event.DisciplineId)
 
+	disciplineLastUpdateAt := fmt.Sprintf("%d:discipline_semester_updated_at:%d", event.Year, event.DisciplineId)
+	disciplineLastUpdateValue := fmt.Sprintf("%d%d", event.Semester, event.UpdatedAt.Unix())
+
 	studentDisciplinesKey := fmt.Sprintf("%d:%d:student_disciplines:%d", event.Year, event.Semester, event.StudentId)
 	studentKey := strconv.Itoa(int(event.StudentId))
 
@@ -56,6 +59,8 @@ func (writer *ScoreWriter) write(s any) (err error) {
 			return nil
 		}
 		_, err = tx.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
+			pipe.Set(ctx, disciplineLastUpdateAt, disciplineLastUpdateValue, 0)
+
 			if event.IsDeleted {
 				pipe.HDel(ctx, studentDisciplineScoresKey, lessonKey)
 			} else {

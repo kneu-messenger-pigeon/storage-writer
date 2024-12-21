@@ -17,7 +17,11 @@ import (
 
 func TestRunApp(t *testing.T) {
 	t.Run("Run with mock config", func(t *testing.T) {
-		_ = os.Setenv("KAFKA_HOST", "localhost:9090")
+		// Create and start mock Kafka server
+		mockServer := NewMockKafkaServer(t)
+		defer mockServer.Close()
+
+		_ = os.Setenv("KAFKA_HOST", MOCK_KAFKA_SERVER_ADDR)
 		_ = os.Setenv("REDIS_DSN", expectedConfig.redisDsn)
 		_ = os.Setenv("KAFKA_TIMEOUT", strconv.Itoa(int(expectedConfig.kafkaTimeout.Seconds())))
 
@@ -31,13 +35,11 @@ func TestRunApp(t *testing.T) {
 		}()
 
 		runtime.Gosched()
-		time.Sleep(time.Second * 5)
 
 		expectedStartedMessageCount := ConnectorPoolSize + 2
 		maxEndTime := time.Now().Add(time.Second * 30)
 
 		ticker := time.NewTicker(time.Second)
-
 		for _ = range ticker.C {
 			if !running {
 				break
@@ -46,25 +48,25 @@ func TestRunApp(t *testing.T) {
 			if time.Now().After(maxEndTime) {
 				break
 			}
+
 			if strings.Count(out.String(), "connector started") >= expectedStartedMessageCount {
 				break
 			}
 
-			if strings.Contains(out.String(), "failed to open connection") {
+			if strings.Contains(out.String(), "error") || strings.Contains(out.String(), "fail") || strings.Contains(out.String(), "fatal") {
 				fmt.Println("found error")
 				break
 			}
 		}
 		ticker.Stop()
 
-		time.Sleep(time.Second)
 		_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		runtime.Gosched()
 		time.Sleep(time.Second)
 
 		assert.NoError(t, appErr)
 		runtime.Gosched()
-		time.Sleep(time.Second)
+
 		outputString := out.String()
 		fmt.Println(outputString)
 
@@ -74,6 +76,7 @@ func TestRunApp(t *testing.T) {
 		assert.Contains(t, outputString, "*main.ScoreWriter connector started")
 		assert.Equal(t, 2, strings.Count(outputString, "*main.LessonWriter connector started"))
 		assert.Equal(t, 2, strings.Count(outputString, "*main.ScoreWriter connector started"))
+		assert.False(t, running)
 
 		assert.Equal(t, "storage-writer", victoriaMetricsInit.LastInstance)
 	})
