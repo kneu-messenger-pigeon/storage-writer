@@ -51,6 +51,7 @@ func TestWriteScore(t *testing.T) {
 
 		redisMock.ExpectWatch(studentDisciplineScoresKey)
 
+		redisMock.ExpectGet(disciplineSemesterUpdatedAtKey).RedisNil()
 		redisMock.ExpectHGet(studentDisciplineScoresKey, lessonKey).RedisNil()
 		redisMock.ExpectTxPipeline()
 
@@ -108,15 +109,17 @@ func TestWriteScore(t *testing.T) {
 		studentDisciplinesKey := "2028:1:student_disciplines:123"
 
 		disciplineSemesterUpdatedAtKey := "2028:discipline_semester_updated_at:234"
-		disciplineSemesterUpdatedAtKeyExpectedValue := "1" + strconv.Itoa(int(event.UpdatedAt.Unix()))
+		disciplineSemesterUpdatedAtKeyStoredValue := "2" + strconv.Itoa(int(event.UpdatedAt.Unix()))
 
 		redisMock.MatchExpectationsInOrder(true)
 
 		redisMock.ExpectWatch(studentDisciplineScoresKey)
 
+		// emulate stored is newer than current one - so no SET operation
+		redisMock.ExpectGet(disciplineSemesterUpdatedAtKey).SetVal(disciplineSemesterUpdatedAtKeyStoredValue)
 		redisMock.ExpectHGet(studentDisciplineScoresKey, lessonKey).RedisNil()
 		redisMock.ExpectTxPipeline()
-		redisMock.ExpectSet(disciplineSemesterUpdatedAtKey, disciplineSemesterUpdatedAtKeyExpectedValue, 0).SetVal("OK")
+
 		redisMock.ExpectHSet(studentDisciplineScoresKey, lessonKey, IsAbsentScoreValue).SetVal(1)
 
 		redisMock.ExpectTxPipelineExec()

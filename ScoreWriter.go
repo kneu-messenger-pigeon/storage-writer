@@ -38,8 +38,8 @@ func (writer *ScoreWriter) write(s any) (err error) {
 
 	disciplineTotalsKey := fmt.Sprintf("%d:%d:totals:%d", event.Year, event.Semester, event.DisciplineId)
 
-	disciplineLastUpdateAt := fmt.Sprintf("%d:discipline_semester_updated_at:%d", event.Year, event.DisciplineId)
-	disciplineLastUpdateValue := fmt.Sprintf("%d%d", event.Semester, event.UpdatedAt.Unix())
+	disciplineLastUpdateAtKey := fmt.Sprintf("%d:discipline_semester_updated_at:%d", event.Year, event.DisciplineId)
+	disciplineLastUpdateNewValue := fmt.Sprintf("%d%d", event.Semester, event.UpdatedAt.Unix())
 
 	studentDisciplinesKey := fmt.Sprintf("%d:%d:student_disciplines:%d", event.Year, event.Semester, event.StudentId)
 	studentKey := strconv.Itoa(int(event.StudentId))
@@ -48,18 +48,22 @@ func (writer *ScoreWriter) write(s any) (err error) {
 	var previousValue events.ScoreValue
 	ctx := context.Background()
 	writeValueFunc := func(tx *redis.Tx) (err error) {
+		disciplineLastUpdateStoredValue, _ := writer.redis.Get(ctx, disciplineLastUpdateAtKey).Result()
 		storedValue, err := writer.redis.HGet(ctx, studentDisciplineScoresKey, lessonKey).Float64()
 		storedIsDeleted := errors.Is(err, redis.Nil)
 		if err != nil && !storedIsDeleted {
 			return err
 		}
 		newValue := makeScoreStorageValue(event)
+
 		if event.IsDeleted == storedIsDeleted && newValue == storedValue {
 			// do nothing, storage state equal to event (value match or already deleted form storage)
 			return nil
 		}
 		_, err = tx.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
-			pipe.Set(ctx, disciplineLastUpdateAt, disciplineLastUpdateValue, 0)
+			if disciplineLastUpdateNewValue > disciplineLastUpdateStoredValue {
+				pipe.Set(ctx, disciplineLastUpdateAtKey, disciplineLastUpdateNewValue, 0)
+			}
 
 			if event.IsDeleted {
 				pipe.HDel(ctx, studentDisciplineScoresKey, lessonKey)
