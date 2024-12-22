@@ -48,7 +48,7 @@ func (writer *ScoreWriter) write(s any) (err error) {
 	var previousValue events.ScoreValue
 	ctx := context.Background()
 	writeValueFunc := func(tx *redis.Tx) (err error) {
-		disciplineLastUpdateStoredValue, _ := writer.redis.Get(ctx, disciplineLastUpdateAtKey).Result()
+		disciplineLastUpdateStoredValue := writer.redis.Get(ctx, disciplineLastUpdateAtKey).Val()
 		storedValue, err := writer.redis.HGet(ctx, studentDisciplineScoresKey, lessonKey).Float64()
 		storedIsDeleted := errors.Is(err, redis.Nil)
 		if err != nil && !storedIsDeleted {
