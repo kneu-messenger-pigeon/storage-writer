@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/kneu-messenger-pigeon/events"
-	"github.com/redis/go-redis/v9"
-	"github.com/segmentio/kafka-go"
 	"io"
 	"sync"
 	"time"
+
+	"github.com/kneu-messenger-pigeon/events"
+	"github.com/redis/go-redis/v9"
+	"github.com/segmentio/kafka-go"
 )
 
 type ConnectorInterface interface {
@@ -30,7 +31,6 @@ func (connector *KafkaToRedisConnector) execute(ctx context.Context, wg *sync.Wa
 	var err error
 	var message kafka.Message
 	var messagesToCommit []kafka.Message
-	var lastWriteTimestamp int64
 	var fetchContext = ctx
 	var fetchContextCancel = func() {}
 
@@ -59,17 +59,13 @@ func (connector *KafkaToRedisConnector) execute(ctx context.Context, wg *sync.Wa
 			}
 
 			messagesToCommit = append(messagesToCommit, message)
-			lastWriteTimestamp = time.Now().Unix()
 		}
 
 		if len(messagesToCommit) != 0 && (len(messagesToCommit) >= 5000 || fetchContext.Err() != nil) {
 			// revert context with time to usual
 			fetchContextCancel()
 			fetchContext = ctx
-			err = connector.saveRedisIfLastSaveOlderThan(lastWriteTimestamp)
-			if err == nil {
-				err = connector.reader.CommitMessages(context.Background(), messagesToCommit...)
-			}
+			err = connector.reader.CommitMessages(context.Background(), messagesToCommit...)
 			fmt.Fprintf(connector.out, "%T Commit %d messages (err: %v) \n", connector.writer, len(messagesToCommit), err)
 			if err == nil {
 				messagesToCommit = []kafka.Message{}
@@ -83,16 +79,4 @@ func (connector *KafkaToRedisConnector) execute(ctx context.Context, wg *sync.Wa
 	fetchContextCancel()
 
 	wg.Done()
-}
-
-func (connector *KafkaToRedisConnector) saveRedisIfLastSaveOlderThan(lastSaveShouldBeAfter int64) error {
-	if lastSaveShouldBeAfter < connector.redis.LastSave(context.Background()).Val() {
-		return nil
-	}
-
-	err := connector.redis.BgSave(context.Background()).Err()
-	if err != nil && err.Error() == RedisBackgroundSaveInProgress {
-		err = nil
-	}
-	return err
 }

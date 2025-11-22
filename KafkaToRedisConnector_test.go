@@ -5,15 +5,16 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"sync"
+	"testing"
+	"time"
+
 	"github.com/go-redis/redismock/v9"
 	"github.com/kneu-messenger-pigeon/events"
 	"github.com/kneu-messenger-pigeon/events/mocks"
 	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"sync"
-	"testing"
-	"time"
 )
 
 func TestKafkaToRedisConnector(t *testing.T) {
@@ -39,7 +40,6 @@ func TestKafkaToRedisConnector(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 
 		redis, redisMock := redismock.NewClientMock()
-		redisMock.ExpectBgSave().SetVal("")
 
 		writer := NewMockWriterInterface(t)
 		writer.On("setRedis", redis).Once()
@@ -155,64 +155,5 @@ func TestKafkaToRedisConnector(t *testing.T) {
 		writer.AssertNotCalled(t, "write")
 
 		assert.Empty(t, out.String())
-	})
-}
-
-func TestConnectorSaveRedisIfLastSaveOlderThan(t *testing.T) {
-
-	t.Run("Already saved", func(t *testing.T) {
-		out := &bytes.Buffer{}
-		redis, redisMock := redismock.NewClientMock()
-
-		now := time.Now().Unix()
-
-		redisMock.ExpectLastSave().SetVal(now)
-
-		connector := KafkaToRedisConnector{
-			redis: redis,
-			out:   out,
-		}
-
-		err := connector.saveRedisIfLastSaveOlderThan(now - 3600)
-		assert.NoError(t, err)
-	})
-
-	t.Run("background save in progress", func(t *testing.T) {
-		out := &bytes.Buffer{}
-		redis, redisMock := redismock.NewClientMock()
-
-		now := time.Now().Unix()
-
-		redisMock.ExpectLastSave().SetVal(now - 7200)
-		redisMock.ExpectBgSave().SetErr(errors.New(RedisBackgroundSaveInProgress))
-
-		connector := KafkaToRedisConnector{
-			redis: redis,
-			out:   out,
-		}
-
-		err := connector.saveRedisIfLastSaveOlderThan(now)
-		assert.NoError(t, err)
-	})
-
-	t.Run("error", func(t *testing.T) {
-		expectedError := errors.New("expected error")
-
-		out := &bytes.Buffer{}
-		redis, redisMock := redismock.NewClientMock()
-
-		now := time.Now().Unix()
-
-		redisMock.ExpectLastSave().SetVal(now - 7200)
-		redisMock.ExpectBgSave().SetErr(expectedError)
-
-		connector := KafkaToRedisConnector{
-			redis: redis,
-			out:   out,
-		}
-
-		err := connector.saveRedisIfLastSaveOlderThan(now)
-		assert.Error(t, err)
-		assert.Equal(t, expectedError, err)
 	})
 }
